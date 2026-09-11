@@ -6,9 +6,9 @@ Pozwala ona tworzyć kod kompatybilny z zestawem LEGO® CS&AI za pomocą klawiat
 
 1. Pobierz zip z wtyczką.
 2. Otwórz `chrome://extensions`.
-3. Włącz **Developer mode**.
-4. Kliknij **Load unpacked**.
-5. Wybierz pobrany folder: `4ll-chrome-extension`.
+3. Włącz **Tryb dewelopera**.
+4. Kliknij **Załaduj rozpakowane**.
+5. Wybierz pobrany folder: `4ll-main`.
 6. Otwórz Coding Canvas pod adresem [code.legoeducation.com](https://code.legoeducation.com/).
 7. Otwórz projekt lub utwórz nowy.
 
@@ -19,7 +19,7 @@ Po zainstalowaniu wtyczki w rogach ekranu pojawią się dwa przyciski otwierają
 1. **Lekcje TADroid** (lewy dolny róg) - interaktywny kurs programowania i robotyki
 2. **Okno kodu** (prawy dolny róg) - podgląd Twojego programu w formie prostego tekstu, odczyt na głos oraz możliwość wpisywania poleceń z klawiatury.
 
-## Korzystanie z panelu lekcji
+## Korzystanie z panelu kursu
 
 Otwórz go klikając przycisk w lewym dolnym rogu lub wciskając **Shift+K**. Jego nagłówek pokazuje, w którym module i lekcji aktualnie jesteś. Poniżej znajdziesz dwie zakładki:
 
@@ -50,7 +50,8 @@ Otwórz go klikając przycisk w prawym dolnym rogu lub wciskając **Shift+O**. Z
 Rozwiń sekcję edycji na dole panelu (skrót: **Shift+U**), by budować program wpisując polecenia tekstowe:
 
 1. **Wybierz miejsce wstawienia:** Użyj przycisków **Wyżej**, **Niżej** lub **Koniec** (`Shift+Góra`, `Shift+Dół`, `Shift+End`), aby wskazać, gdzie ma pojawić się nowe polecenie.
-2. **Wpisz polecenie:** Przykłady:
+2. **Wpisz polecenie:**
+   Przykłady:
    * `Move forward for 10 steps` – jazda do przodu o 10 kroków
    * `Turn right 90 degrees` – obrót w prawo o 90 stopni
    * `Write "Hello"` – wyświetlenie napisu

@@ -157,7 +157,7 @@
   const lessonToggle = document.createElement('button');
   lessonToggle.className = 'tadroid-toggle tadroid-toggle-left';
   lessonToggle.type = 'button';
-  lessonToggle.textContent = 'Otwórz panel lekcji';
+  lessonToggle.textContent = 'Otwórz panel kursu';
   shadow.appendChild(lessonToggle);
 
   const lessonPanel = document.createElement('section');
@@ -3238,7 +3238,7 @@
   function setLessonPanelOpen(isOpen, options = {}) {
     state.lesson.isOpen = Boolean(isOpen);
     lessonPanel.classList.toggle('tadroid-hidden', !state.lesson.isOpen);
-    lessonToggle.textContent = state.lesson.isOpen ? 'Zamknij panel lekcji' : 'Otwórz panel lekcji';
+    lessonToggle.textContent = state.lesson.isOpen ? 'Zamknij panel kursu' : 'Otwórz panel kursu';
     applyShortcutMetadata(lessonToggle, SHORTCUTS.toggleLesson);
     if (state.lesson.isOpen && options.focus !== false) {
       if (state.lesson.outlineOpen) {
