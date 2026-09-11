@@ -1,0 +1,947 @@
+.tadroid-root {
+  --tadroid-bg: #ffffff;
+  --tadroid-surface: #f8fafc;
+  --tadroid-surface-strong: #f1f5f9;
+  --tadroid-border: #cbd5e1;
+  --tadroid-border-strong: #94a3b8;
+  --tadroid-text: #0f172a;
+  --tadroid-text-muted: #475569;
+  --tadroid-accent: #95d802;
+  --tadroid-accent-strong: #4d7c0f;
+  --tadroid-accent-soft: #ecfccb;
+  --tadroid-danger: #b42318;
+  --tadroid-danger-soft: #fef3f2;
+  --tadroid-code-bg: #0f172a;
+  --tadroid-code-text: #f8fafc;
+  --tadroid-shadow: 0 20px 48px rgba(15, 23, 42, 0.18);
+  all: initial;
+}
+
+.tadroid-toggle,
+.tadroid-panel,
+.tadroid-panel *,
+.tadroid-panel *::before,
+.tadroid-panel *::after {
+  box-sizing: border-box;
+}
+
+.tadroid-toggle {
+  all: initial;
+  position: fixed;
+  bottom: 18px;
+  z-index: 2147483647;
+  min-height: 44px;
+  padding: 10px 14px;
+  border: 1px solid var(--tadroid-border-strong);
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.96);
+  color: var(--tadroid-text);
+  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
+  font: 600 14px/1.2 "Segoe UI", sans-serif;
+  cursor: pointer;
+}
+
+.tadroid-toggle-left {
+  left: 18px;
+}
+
+.tadroid-toggle-right {
+  right: 18px;
+}
+
+.tadroid-panel {
+  all: initial;
+  position: fixed;
+  top: 16px;
+  bottom: 100px;
+  z-index: 2147483646;
+  display: flex;
+  flex-direction: column;
+  width: min(440px, calc(100vw - 32px));
+  height: auto;
+  overflow: hidden;
+  border: 1px solid var(--tadroid-border);
+  border-radius: 18px;
+  background: var(--tadroid-bg);
+  color: var(--tadroid-text);
+  box-shadow: var(--tadroid-shadow);
+  font: 400 14px/1.5 "Segoe UI", sans-serif;
+}
+
+.tadroid-panel-left {
+  left: 16px;
+  width: min(390px, calc(100vw - 32px));
+}
+
+.tadroid-panel-right {
+  right: 16px;
+}
+
+.tadroid-hidden {
+  display: none !important;
+}
+
+.tadroid-panel [hidden] {
+  display: none !important;
+}
+
+.tadroid-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 18px 14px;
+  background: var(--tadroid-bg);
+  border-bottom: 1px solid var(--tadroid-border);
+}
+
+.tadroid-title {
+  margin: 0;
+  color: var(--tadroid-text);
+  font-size: 18px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.tadroid-subtitle {
+  margin: 4px 0 0;
+  color: var(--tadroid-text-muted);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.tadroid-lesson-header-copy {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.tadroid-lesson-course {
+  margin: 0;
+  color: var(--tadroid-accent-strong);
+  font-size: 12px;
+  line-height: 1.35;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.tadroid-icon-btn,
+.tadroid-btn,
+.tadroid-select,
+.tadroid-range,
+.tadroid-editor-input {
+  font-family: inherit;
+}
+
+.tadroid-icon-btn,
+.tadroid-btn {
+  all: initial;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 6px 9px;
+  border: 1px solid var(--tadroid-border-strong);
+  border-radius: 10px;
+  background: var(--tadroid-bg);
+  color: var(--tadroid-text);
+  font: 600 13px/1.2 "Segoe UI", sans-serif;
+  cursor: pointer;
+}
+
+.tadroid-icon-btn {
+  min-width: 20px;
+}
+
+.tadroid-btn-primary {
+  border-color: var(--tadroid-accent-strong);
+  background: var(--tadroid-accent-strong);
+  color: #ffffff;
+}
+
+.tadroid-btn-danger {
+  border-color: rgba(180, 35, 24, 0.45);
+  background: var(--tadroid-danger-soft);
+  color: var(--tadroid-danger);
+}
+
+.tadroid-status {
+  margin: 12px 18px 0;
+  padding: 10px 12px;
+  border: 1px solid var(--tadroid-border);
+  border-radius: 12px;
+  background: var(--tadroid-surface);
+  color: var(--tadroid-text-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.tadroid-status-error {
+  border-color: rgba(180, 35, 24, 0.35);
+  background: var(--tadroid-danger-soft);
+  color: #7a271a;
+}
+
+.tadroid-status[hidden] {
+  display: none;
+}
+
+.tadroid-confirm-dialog {
+  width: min(360px, calc(100vw - 32px));
+  margin: auto;
+  padding: 20px;
+  border: 2px solid var(--tadroid-border-strong);
+  border-radius: 16px;
+  background: var(--tadroid-bg);
+  color: var(--tadroid-text);
+  box-shadow: var(--tadroid-shadow);
+  font: 400 14px/1.5 "Segoe UI", sans-serif;
+}
+
+.tadroid-confirm-dialog::backdrop {
+  background: rgba(15, 23, 42, 0.64);
+}
+
+.tadroid-confirm-title {
+  margin: 0;
+  color: var(--tadroid-text);
+  font-size: 18px;
+  line-height: 1.3;
+  font-weight: 750;
+}
+
+.tadroid-confirm-description {
+  margin: 10px 0 0;
+  color: var(--tadroid-text-muted);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.tadroid-confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+
+.tadroid-parts-dialog {
+  width: min(420px, calc(100vw - 32px));
+}
+
+.tadroid-parts-dialog-list {
+  list-style: none;
+  margin: 14px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 10px;
+  max-height: min(360px, 60vh);
+  overflow-y: auto;
+}
+
+.tadroid-parts-dialog-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px;
+  border: 1px solid var(--tadroid-border);
+  border-radius: 10px;
+  background: var(--tadroid-surface);
+}
+
+.tadroid-parts-dialog-thumb {
+  flex: 0 0 auto;
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 8px;
+  border: 1px solid var(--tadroid-border);
+  background: #ffffff;
+}
+
+.tadroid-parts-dialog-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.tadroid-parts-dialog-name {
+  margin: 0;
+  color: var(--tadroid-text);
+  font-size: 13px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+.tadroid-parts-dialog-meta {
+  margin: 0;
+  color: var(--tadroid-text-muted);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.tadroid-main,
+.tadroid-lesson-main,
+.tadroid-reader-body {
+  padding: 16px 18px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tadroid-reader-body,
+.tadroid-lesson-main {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+.tadroid-lesson-main {
+  overflow: hidden;
+}
+
+.tadroid-main {
+  padding: 0;
+}
+
+.tadroid-panel-right .tadroid-main {
+  flex: 0 0 auto;
+}
+
+.tadroid-meta,
+.tadroid-lesson-outline-lesson {
+  margin: 0;
+  color: var(--tadroid-text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.tadroid-lesson-progress {
+  display: block;
+}
+
+.tadroid-lesson-progress-track {
+  display: block;
+  width: 100%;
+  height: 10px;
+  overflow: hidden;
+  border: 1px solid var(--tadroid-border-strong);
+  border-radius: 999px;
+  background: var(--tadroid-bg);
+}
+
+.tadroid-lesson-progress-fill {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--tadroid-accent-strong);
+  transition: width 180ms ease-out;
+}
+
+.tadroid-lesson-tabs {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 3px;
+  border: 1px solid var(--tadroid-border);
+  border-radius: 12px;
+  background: var(--tadroid-surface-strong);
+}
+
+.tadroid-lesson-tab {
+  all: initial;
+  min-width: 0;
+  padding: 9px 10px;
+  border-radius: 9px;
+  color: var(--tadroid-text-muted);
+  font: 700 13px/1.3 "Segoe UI", sans-serif;
+  text-align: center;
+  cursor: pointer;
+}
+
+.tadroid-lesson-tab[aria-selected="true"] {
+  background: var(--tadroid-bg);
+  color: var(--tadroid-accent-strong);
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.16);
+}
+
+.tadroid-lesson-tab:not(:disabled):hover {
+  color: var(--tadroid-text);
+  background: var(--tadroid-accent-soft);
+}
+
+.tadroid-lesson-tab:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.tadroid-lesson-view,
+.tadroid-lesson-outline-view {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.tadroid-lesson-view {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tadroid-lesson-outline-view .tadroid-lesson-outline-panel {
+  padding: 0 2px 2px;
+}
+
+.tadroid-lesson-copy,
+.tadroid-editor-copy,
+.tadroid-insertion,
+.tadroid-lesson-sample-copy,
+.tadroid-lesson-outline-section,
+.tadroid-lesson-outline-group,
+.tadroid-lesson-outline-list {
+  display: grid;
+  gap: 6px;
+}
+
+.tadroid-text,
+.tadroid-lesson-sample-text {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  margin: 0;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--tadroid-code-bg);
+  color: var(--tadroid-code-text);
+  font: 500 13px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  white-space: pre-wrap;
+}
+
+.tadroid-lesson-text {
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--tadroid-text);
+  font: 400 14px/1.65 "Segoe UI", sans-serif;
+  white-space: pre-wrap;
+}
+
+.tadroid-text-line {
+  display: block;
+  min-height: 1.6em;
+  margin: 0 -8px;
+  padding: 1px 8px;
+  border-left: 4px solid transparent;
+  border-radius: 6px;
+  white-space: pre-wrap;
+}
+
+.tadroid-text-line-active {
+  border-left-color: var(--tadroid-accent-strong);
+  background: #d9f99d;
+  color: #1a2e05;
+  font-weight: 800;
+  box-shadow: 0 0 0 1px rgba(77, 124, 15, 0.35);
+}
+
+.tadroid-controls,
+.tadroid-editor,
+.tadroid-lesson-outline,
+.tadroid-lesson-sample {
+  border: 1px solid var(--tadroid-border);
+  border-radius: 14px;
+  background: var(--tadroid-surface);
+}
+
+.tadroid-controls {
+  margin: 0;
+  padding: 14px;
+  display: grid;
+  gap: 12px;
+}
+
+.tadroid-panel-right.tadroid-editor-mode .tadroid-controls {
+  display: none;
+}
+
+.tadroid-panel-right .tadroid-text {
+  flex: 0 0 auto;
+  overflow: visible;
+  min-height: min(220px, 34vh);
+  max-height: none;
+}
+
+.tadroid-panel-right.tadroid-editor-mode .tadroid-reader-body {
+  overflow: hidden;
+}
+
+.tadroid-panel-right.tadroid-editor-mode .tadroid-main {
+  min-height: 0;
+}
+
+.tadroid-panel-right.tadroid-editor-mode .tadroid-text {
+  overflow: auto;
+  min-height: 120px;
+  max-height: min(22vh, 180px);
+}
+
+.tadroid-editor {
+  overflow: hidden;
+}
+
+.tadroid-panel-right.tadroid-editor-mode .tadroid-editor[open] {
+  display: block;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.tadroid-editor-toggle {
+  list-style: none;
+  display: block;
+  padding: 14px 16px;
+  cursor: pointer;
+  color: var(--tadroid-text);
+  font-size: 13px;
+  line-height: 1.35;
+  font-weight: 700;
+}
+
+.tadroid-editor-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.tadroid-editor-toggle::after {
+  content: "Pokaż";
+  float: right;
+  color: var(--tadroid-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.tadroid-editor[open] .tadroid-editor-toggle::after {
+  content: "Skryj";
+}
+
+.tadroid-editor-panel,
+.tadroid-lesson-outline-panel {
+  display: grid;
+  gap: 12px;
+  padding: 0 16px 16px;
+  min-width: 0;
+}
+
+.tadroid-editor-panel {
+  max-height: 320px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.tadroid-editor-panel > * {
+  min-width: 0;
+}
+
+.tadroid-panel-right.tadroid-editor-mode .tadroid-editor-panel {
+  max-height: none;
+  overflow: visible;
+}
+
+.tadroid-editor-title,
+.tadroid-editor-label {
+  margin: 0;
+  color: var(--tadroid-text);
+  font-size: 12px;
+  line-height: 1.6;
+  font-weight: 700;
+}
+
+.tadroid-editor-hint,
+.tadroid-insertion-label,
+.tadroid-editor-status {
+  margin: 0;
+  color: var(--tadroid-text-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.tadroid-insertion {
+  gap: 12px;
+}
+
+.tadroid-insertion-label {
+  padding: 13px 14px;
+  border: 1px solid var(--tadroid-border);
+  border-radius: 12px;
+  background: var(--tadroid-bg);
+  color: var(--tadroid-text-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.tadroid-insertion-label strong {
+  color: var(--tadroid-text);
+  font-weight: 750;
+}
+
+.tadroid-editor-hint-examples {
+  color: var(--tadroid-text-muted);
+}
+
+.tadroid-editor-status {
+  padding: 10px 12px;
+  border: 1px solid var(--tadroid-border);
+  border-radius: 12px;
+  background: var(--tadroid-bg);
+}
+
+.tadroid-editor-status-error {
+  border-color: rgba(180, 35, 24, 0.35);
+  background: var(--tadroid-danger-soft);
+  color: #7a271a;
+  white-space: pre-wrap;
+}
+
+.tadroid-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.tadroid-field {
+  display: grid;
+  gap: 6px;
+  color: var(--tadroid-text);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.tadroid-select {
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid var(--tadroid-border-strong);
+  border-radius: 10px;
+  background: var(--tadroid-bg);
+  color: var(--tadroid-text);
+  font-size: 13px;
+}
+
+.tadroid-range {
+  width: 100%;
+  accent-color: var(--tadroid-accent);
+}
+
+.tadroid-actions,
+.tadroid-editor-actions,
+.tadroid-lesson-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tadroid-panel-right.tadroid-editor-mode .tadroid-editor-actions .tadroid-btn {
+  flex: 1 1 140px;
+}
+
+.tadroid-editor-actions-main {
+  justify-content: flex-start;
+}
+
+.tadroid-panel-right .tadroid-editor-actions {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  min-width: 0;
+  padding-bottom: 2px;
+  scrollbar-width: thin;
+}
+
+.tadroid-panel-right .tadroid-editor-actions .tadroid-btn {
+  min-height: 34px;
+  padding: 6px 8px;
+  border-radius: 9px;
+  font-size: 12px;
+  line-height: 1.15;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.tadroid-panel-right .tadroid-editor-actions-main .tadroid-btn {
+  min-height: 36px;
+  padding-inline: 10px;
+}
+
+.tadroid-panel-right .tadroid-editor-navigation-actions,
+.tadroid-panel-right .tadroid-editor-delete-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  justify-content: flex-start;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0;
+}
+
+.tadroid-panel-right .tadroid-editor-navigation-actions .tadroid-btn,
+.tadroid-panel-right .tadroid-editor-delete-actions .tadroid-btn {
+  width: auto;
+  min-width: 0;
+  min-height: 32px;
+  padding: 5px 7px;
+  white-space: nowrap;
+}
+
+.tadroid-panel-right .tadroid-editor-navigation-actions .tadroid-btn {
+  gap: 5px;
+}
+
+.tadroid-editor-input {
+  width: 100%;
+  min-height: 104px;
+  max-height: 220px;
+  padding: 12px 14px;
+  border: 1px solid var(--tadroid-border-strong);
+  border-radius: 12px;
+  background: var(--tadroid-bg);
+  color: var(--tadroid-text);
+  font-size: 13px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.tadroid-editor-examples {
+  overflow: hidden;
+  border: 1px solid var(--tadroid-border);
+  border-radius: 12px;
+  background: var(--tadroid-bg);
+}
+
+.tadroid-examples-toggle {
+  list-style: none;
+  padding: 10px 12px;
+  color: var(--tadroid-text);
+  font-size: 12px;
+  line-height: 1.4;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.tadroid-examples-toggle::-webkit-details-marker {
+  display: none;
+}
+
+.tadroid-examples-toggle::after {
+  content: "Pokaż";
+  float: right;
+  color: var(--tadroid-text-muted);
+  font-weight: 600;
+}
+
+.tadroid-editor-examples[open] .tadroid-examples-toggle::after {
+  content: "Skryj";
+}
+
+.tadroid-editor-examples .tadroid-editor-hint-examples {
+  margin: 0;
+  padding: 0 12px 12px;
+}
+
+.tadroid-editor-input:disabled,
+.tadroid-btn:disabled,
+.tadroid-icon-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.tadroid-lesson-heading,
+.tadroid-lesson-outline-heading {
+  margin: 0;
+  color: var(--tadroid-text);
+  font-size: 17px;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.tadroid-lesson-sample {
+  display: flex;
+  flex-direction: column;
+  padding: 24px;
+  gap: 12px;
+}
+
+.tadroid-theory-note {
+  margin: 0;
+  color: var(--tadroid-text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+.tadroid-lesson-sample-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.tadroid-lesson-sample-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.tadroid-lesson-sample-header .tadroid-btn {
+  flex: 0 0 auto;
+  align-self: center;
+  max-width: 100%;
+  white-space: nowrap;
+}
+
+.tadroid-lesson-outline-step-row {
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.tadroid-lesson-outline-step {
+  all: initial;
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--tadroid-border);
+  border-radius: 10px;
+  background: var(--tadroid-bg);
+  color: var(--tadroid-text);
+  font: 500 13px/1.4 "Segoe UI", sans-serif;
+  text-align: left;
+  cursor: pointer;
+}
+
+.tadroid-lesson-outline-step[aria-current="step"] {
+  border-color: var(--tadroid-accent);
+  background: var(--tadroid-accent-soft);
+  color: #365314;
+  font-weight: 700;
+}
+
+.tadroid-lesson-outline-parts-button {
+  all: initial;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 10px;
+  border: 1px solid var(--tadroid-border);
+  border-radius: 10px;
+  background: var(--tadroid-bg);
+  color: var(--tadroid-text);
+  font: 600 12px/1.3 "Segoe UI", sans-serif;
+  text-align: left;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.tadroid-lesson-action-status {
+  white-space: pre-wrap;
+}
+
+.tadroid-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.tadroid-toggle:hover,
+.tadroid-icon-btn:hover,
+.tadroid-btn:hover,
+.tadroid-lesson-outline-step:hover,
+.tadroid-lesson-outline-parts-button:hover {
+  filter: none;
+}
+
+.tadroid-toggle:hover,
+.tadroid-icon-btn:hover,
+.tadroid-btn:not(:disabled):hover,
+.tadroid-lesson-outline-step:hover,
+.tadroid-lesson-outline-parts-button:hover {
+  border-color: var(--tadroid-accent);
+  background: var(--tadroid-surface-strong);
+}
+
+.tadroid-btn-primary:not(:disabled):hover {
+  background: #3f6212;
+  border-color: #3f6212;
+  color: #ffffff;
+}
+
+.tadroid-btn-danger:not(:disabled):hover {
+  background: #fde7e4;
+  border-color: rgba(180, 35, 24, 0.65);
+}
+
+.tadroid-toggle:focus-visible,
+.tadroid-icon-btn:focus-visible,
+.tadroid-btn:focus-visible,
+.tadroid-select:focus-visible,
+.tadroid-range:focus-visible,
+.tadroid-editor-input:focus-visible,
+.tadroid-editor-toggle:focus-visible,
+.tadroid-examples-toggle:focus-visible,
+.tadroid-lesson-tab:focus-visible,
+.tadroid-text:focus-visible,
+.tadroid-lesson-text:focus-visible,
+.tadroid-lesson-outline-step:focus-visible,
+.tadroid-lesson-outline-parts-button:focus-visible {
+  outline: 3px solid rgba(77, 124, 15, 0.34);
+  outline-offset: 2px;
+}
+
+@media (max-width: 1180px) {
+  .tadroid-panel-left,
+  .tadroid-panel-right {
+    width: min(348px, calc(50vw - 24px));
+  }
+}
+
+@media (max-width: 860px) {
+  .tadroid-panel-left,
+  .tadroid-panel-right {
+    width: min(324px, calc(50vw - 20px));
+  }
+
+  .tadroid-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .tadroid-lesson-sample-header {
+    flex-wrap: wrap;
+  }
+
+  .tadroid-lesson-sample-header .tadroid-btn {
+    white-space: normal;
+  }
+}
+
+@media (max-width: 720px) {
+  .tadroid-panel-left,
+  .tadroid-panel-right {
+    top: 12px;
+    bottom: 64px;
+    width: min(312px, calc(50vw - 18px));
+    height: auto;
+  }
+
+  .tadroid-toggle {
+    bottom: 12px;
+  }
+
+}

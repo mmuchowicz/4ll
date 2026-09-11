@@ -1,0 +1,27 @@
+{
+  "manifest_version": 3,
+  "name": "4LL Coding Canvas Extension",
+  "version": "0.1.0",
+  "description": "Dodaje do LEGO® Coding Canvas 2 panele umożliwiające korzystanie z interfejsu osobom niewidomym i słabowidzącym.",
+  "permissions": ["storage"],
+  "content_scripts": [
+    {
+      "matches": ["https://code.legoeducation.com/*"],
+      "css": ["panel.css"],
+      "js": ["lecp-adapter.js", "parts-catalog.js", "course-content.js", "content.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": ["https://code.legoeducation.com/*"],
+      "js": ["page-bridge.js"],
+      "run_at": "document_idle",
+      "world": "MAIN"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["panel.css", "parts-images/*"],
+      "matches": ["https://code.legoeducation.com/*"]
+    }
+  ]
+}
