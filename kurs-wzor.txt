@@ -1,0 +1,447 @@
+@course: TADroid Robotics Basics
+@id: robotics-basics
+@version: 1
+
+@module: Module 1 · What is a robot?
+
+@lesson: Lesson 1 · Automatic systems or robots?
+@step: Machines that follow rules vs machines that adapt
+Think about the machines you encounter every day. An elevator arrives at your floor when you press a button, opens its doors on a timer, and carries you up a steel shaft. A vending machine drops a can into the tray after it validates your payment.
+Are these machines robots?
+To an engineer, the answer is no. They are sophisticated automatic systems. An elevator follows fixed mechanical tracks and deterministic relay switches. It does not calculate where you want to go before you tell it, it cannot steer around an obstacle in the hallway, and it cannot reconfigure its own mechanics if something unexpected happens.
+A true robot is different because it possesses physical agency: the ability to actively measure an unpredictable physical environment, process those observations into decisions, and execute purposeful physical actions to change the world around it.
+
+@step: The autonomy spectrum in the real world
+The distinction between an automatic system and a robot comes down to how a machine handles uncertainty in physical space.
+An electric toaster is an open-loop mechanism. It locks a spring, energizes a heating filament on a timer, and releases. It has no way of knowing whether the slot contains frozen bread, a bagel, or nothing at all; it runs the exact same cycle regardless of reality.
+A modern climate control system is a closed-loop automated controller. It uses a temperature sensor to turn a furnace on and off. While it adapts to real-world feedback, it only regulates a single scalar value. It has no kinematic degrees of freedom and cannot move through or physically manipulate its environment.
+On the other hand, a planetary exploration rover or an autonomous warehouse picker are true robots. A warehouse rover encounters dropped parcels, shifting obstacles, and uneven floors. It continuously calculates its position in three dimensions, plots dynamic paths around moving forklifts, and adjusts the grip force of its arm so it neither drops an item nor crushes it.
+
+@lesson: Lesson 2 · The Sense-Think-Act loop
+@step: The 3 essential jobs
+Every robot operates through an unbroken cycle known as the Sense-Think-Act loop. If any of these three stages is absent, robotic agency collapses.
+1. Sense: The robot samples the physical world through sensors, converting raw analog physics (like light reflectance, ultrasonic echoes, motor shaft angles, or mechanical pressure) into digital numbers.
+2. Think: An onboard processor evaluates those numbers against an internal program. It calculates the error between where the robot is and where it wants to be, then determines what physical adjustments are required.
+3. Act: The robot delivers physical work to the world through actuators either by spinning electric motors, opening gripper valves, or emitting acoustic signals.
+Remove sensing, and a robot becomes a blind, dangerous mechanism plowing into obstacles. Remove thinking, and it becomes a remote-controlled puppet requiring an external brain. Remove acting, and it becomes a passive computer monitor observing a world it cannot touch.
+
+@step: Wireless hardware and distributed intelligence
+In traditional robotics kits, every motor and sensor connects with thick cables to a central controller brick. The LEGO CS&AI system eliminates this clutter through a distributed wireless architecture.
+There is no central hub brick. Instead, the Double Motor, Single Motor, Controller and Color Sensor are independent smart modules. Each housing encloses its own rechargeable battery, Bluetooth transceiver, motor driver circuits, and dedicated microcontroller.
+When you write code on your computer in Coding Canvas, your computer acts as the compiler and workbench. When you run your program, Coding Canvas compiles your commands and transmits them over Bluetooth directly to the smart components on your build plate. The microcontrollers inside the motors and sensors receive those instruction packets and execute them in real time.
+
+@step: Meet the sense, think, and act pieces in your kit
+@parts: 118091:whitex1
+@parts: 118084:whitex1
+@parts: 118092:whitex1
+Before building, take a moment to explore the key pieces in the CS&AI set.
+The Double Motor: A smooth rectangular housing enclosing two independent electric motors side by side. On its top face, locate the power button and status indicator. On its outer sides, find the circular output hubs. Each hub has a cross-axle socket that rotates under motor power and contains an internal optical encoder to measure rotation angles.
+The Single Motor: A compact, single-axis actuator designed for lightweight mechanisms, steering assemblies, or lift arms.
+The Color Sensor: A standalone wireless module featuring two circular optical lenses on its front face that project light and measure reflection levels.
+
+@lesson: Lesson 3 · How does a robot follow a program?
+@step: Every program needs a beginning
+When you turn on a computer, it doesn't execute code at random; it needs an exact starting location in memory. In robotics, this entry point is called a reset vector.
+In Coding Canvas, that starting point is represented by the 'When the program starts' block. The moment you press Run, the microcontroller initializes its instruction pointer right there, retrieves the first command, executes it, and advances down the line.
+If you open a new project, this block is already there.
+
+@step: Step-by-step execution
+@parts: 118091:whitex1
+A microcontroller may execute millions of instructions every second, but by default it still follows one simple rule: it finishes the current instruction before starting the next one.
+When an instruction commands a motor to move for a specific duration or distance (such as spinning for 3 full rotations) it is typically a blocking action.
+During a blocking command, the Program Counter pauses on that line. The processor continuously polls the motor's internal rotation encoder until the 3 rotations are complete. Only after the motor physically comes to rest does the Program Counter advance to the next command.
+To feel this directly:
+1. Turn on your Double Motor and ensure it is paired via Bluetooth to Coding Canvas.
+2. Rest the motor module flat on the desk in front of you.
+3. Place your left index finger gently on the left motor hub, and your right index finger on the right motor hub.
+4. Run the sequential script below.
+
+@sample
+When the program starts
+Run the left motor clockwise for 3 rotations
+Run the right motor clockwise for 3 rotations
+@end
+
+Beneath your fingers, the motors move in strict succession. The left motor hums and spins three complete turns while the right motor sits entirely lifeless. Only when the left motor clicks to a halt does the right motor spin. This is sequential execution: step one must reach complete physical termination before step two begins.
+
+@step: Two starting points
+@parts: 118091:whitex1
+As you noticed, everything under a single 'When the program starts block' runs strictly in order, but what would happen if we added a second starting block? Try it out!
+
+@sample
+When the program starts
+Run the left motor clockwise for 3 rotations
+@end
+
+@sample
+When the program starts
+Run the right motor clockwise for 3 rotations
+@end
+
+Press Run once. Both trigger blocks fire at the same instant, so both motors start moving together instead of one after another.
+
+@step: Why mobile robots require concurrency?
+Sequential execution works for a robotic arm performing single-joint movements, but it fails on a two-wheeled driving robot.
+If a rover ran sequential code to drive forward, it would spin the left wheel for three turns, stop, and then spin the right wheel for three turns. Instead of driving in a straight line, the chassis would swing back and forth in disjointed pivots. To move straight, both wheels must run simultaneously.
+Handling multiple actions at the same time is called concurrency.
+
+@step: Time-slicing
+Think about how your phone behaves every day. It streams music, checks background notifications, and registers your every tap without hesitation.
+It manages this through a scheduler. Instead of letting one heavy task monopolize the processor, the operating system parcels out computing time in razor-thin slices called time quanta. It dedicates a fraction of a millisecond to audio, pauses, catches your screen tap, pauses, and handles network traffic. Because it switches thousands of times each second, you get unbroken actions.
+Coding Canvas applies this exact scheduling logic to physical hardware.
+When you start a program, the engine catalogs every independent code stack into an active list of tasks called threads.
+During each engine cycle, the processor advances Thread A until it reaches a natural yield point (like a motor command, a wait block, or a loop boundary). It bookmarks Thread A's position, switches to Thread B, and executes instructions there until Thread B yields.
+Once every thread has taken its turn, the engine bundles the resulting commands into data packets and transmits them over Bluetooth to the smart modules.
+
+@module: Module 2 · Memory, Functions & Queues
+@lesson: Lesson 1 · Variables
+@step: The goldfish problem
+A basic machine only understands the exact present millisecond. When a distance sensor detects an obstacle, it reacts; the moment the obstacle moves away, that information vanishes completely.
+Without internal memory, a machine cannot count how many items have passed on a conveyor, remember which room it just left, or calculate its average speed. It has no past and no future.
+To give a machine history, programmers use variables.
+A variable is a labeled container inside the microcontroller's Random-Access Memory. You give the container a name, store a value inside it, and change or inspect that value whenever your code runs. While physical sensors continuously fluctuate, a variable holds onto its value until your code explicitly tells it to change.
+
+@sample
+Set variable sound to "Dog"
+@end
+
+
+@module: Module 3 · Mechanical Foundations
+
+@lesson: Lesson 1 · Degrees of Freedom: How Machines Move in Space
+@step: How many ways can an object move?
+Place a single LEGO beam flat on your desk. Without picking it up, slide it forward and backward. Now slide it left and right. Finally, spin it in place like the hand of a clock.
+In physics and mechanical engineering, every independent direction or way a body can move is called a Degree of Freedom (often abbreviated as DoF).
+If you pick that beam up off the desk into the open air, the possibilities double. In free 3D space, any rigid object has exactly 6 Degrees of Freedom:
+3 translational (moving along straight axes: forward/back, left/right, up/down) and 3 rotational (turning around those axes: pitch, yaw, and roll).
+A submarine moving through deep water uses all 6. But in robotics, we rarely want every part moving in every possible direction at once. We design mechanisms specifically to constrain motion to exact paths.
+
+@step: Your arm as a kinematic chain
+To understand how robotic arms are designed, you don't need a robot yet—your own body is an advanced mechanical manipulator.
+Rest your right upper arm vertically against your ribcage and keep your shoulder completely still. Now bend and straighten your elbow.
+Your forearm moves through an arc, but it can only rotate around a single axis passing through your elbow joint. Your elbow is a 1-DoF hinge joint. It cannot twist side-to-side or slide forward along your upper arm.
+Now, unlock your shoulder while keeping your elbow rigid. Your shoulder is a ball-and-socket joint with 3 Degrees of Freedom: you can swing your arm forward and backward (pitch), out to the side and in (yaw), and rotate your entire arm inward or outward along its length (roll).
+Roboticists call a sequence of rigid segments connected by joints a kinematic chain. By chaining multiple 1-DoF joints together at different angles, engineers build robotic arms that can reach any point in space.
+
+@step: A motor is a 1-DoF rotational actuator
+Take one LEGO motor from your kit. Feel the circular face where the axle hole is located.
+When the motor receives power, the shaft does not slide in and out; it does not tilt off-axis. It rotates purely around a single central axis.
+Therefore, a single motor provides exactly 1 rotational Degree of Freedom.
+If you mount a long beam to that motor shaft, the tip of the beam can only travel along a fixed circle. Its motion is completely deterministic—meaning if you know the angle of the motor, you know the exact position of the beam.
+
+@step: Building a 2-DoF planar manipulator
+Let's assemble a basic 2-DoF kinematic chain using two motors to feel how independent axes combine.
+
+1. Take Motor 1 and place it flat on the desk. This will act as the "base joint" (like your shoulder).
+2. Take a long beam (the "upper arm") and secure one end to the axle of Motor 1.
+3. Attach the body of Motor 2 (the "elbow joint") to the free end of that beam.
+4. Attach a second beam (the "forearm") to the rotating shaft of Motor 2.
+
+Without turning the power on, gently move the second beam with your fingers.
+Notice what happens:
+Rotating Motor 1 swings the entire structure, changing the position of Motor 2 in space.
+Rotating Motor 2 changes the angle between the two beams without moving Motor 1 at all.
+Together, these two 1-DoF joints give the tip of the arm 2 Degrees of Freedom across a flat 2D plane.
+
+@step: Controlled motion vs. flopping (The constraint problem)
+What happens if a mechanism has more degrees of freedom than motors to control them?
+Think of a standard door hinge: it has 1 DoF (it swings). If the wind blows, it slams shut because there is no actuator holding its position. This is an unconstrained or under-actuated degree of freedom.
+In robotics, every degree of freedom must either be:
+
+1. Actuated (driven and held by a motor), or
+2. Constrained (locked physically by pins, frames, or guides).
+If you build a robot with 4 moving joints but only 2 motors, the other 2 joints will flop unpredictably under gravity and inertia. Precision robotics requires matching your actuators and kinematic constraints to the exact degrees of freedom your task demands.
+
+@lesson: Lesson 2 · Mechanical Advantage: Trading Distance for Force
+@step: Why can't you open a heavy door near the hinge?
+Walk up to a heavy door in your home or school.
+First, place your palm at the outer edge of the door—near the handle, far away from the hinge—and push it open. It feels light and requires very little effort.
+Now, place your palm just two inches away from the hinge side and try to push the door open again.
+You will immediately feel that you need to push significantly harder to produce the exact same motion.
+The door hasn't become heavier, and the hinges haven't changed. You are experiencing the fundamental trade-off of mechanical engineering: Mechanical Advantage.
+
+@step: The golden rule of mechanics
+Energy cannot be created out of nothing. In physics, mechanical work performed by a force acting over a linear distance is defined as:
+Work = Force × Distance
+
+If a machine requires a certain amount of work to move a load, you have two choices:
+
+1. Apply a small force over a long distance, or
+2. Apply a massive force over a very short distance.
+The amount of mechanical work remains identical in both cases.
+When a machine allows you to apply a smaller force to overcome a larger resistance by increasing the distance you move, we say the machine provides Mechanical Advantage.
+Mechanical Advantage is calculated as the ratio of the output force to the input force:
+MA = Output Force / Input Force
+
+@step: Rotational systems and torque
+Because robot motors rotate rather than slide, we measure rotational force as Torque.
+Torque is the rotational equivalent of linear force. It is the product of the force applied and the perpendicular distance from the pivot point (called the lever arm or radius):
+Torque = Force × Distance to pivot
+
+When you pushed the door near the handle, your hand was far from the hinge (large radius). A small force multiplied by a large distance created enough torque to swing the heavy door.
+When you pushed near the hinge (small radius), you had to exert a huge force to achieve that same required torque.
+
+@step: Feeling motor torque and leverage
+@parts: 118084:whitex1
+@parts: 3703:blackx1
+Let's feel this principle directly using a LEGO motor.
+
+1. Connect a 16-hole long beam to the single motor shaft so it acts like a long lever arm.
+2. Turn on your Single Motor and ensure it is paired via Bluetooth to Coding Canvas.
+3. Run the following code to command the motor to hold its position with moderate strength:
+
+@sample
+When the program starts
+Start the motor at power 30
+@end
+
+Now, perform two tactile tests:
+
+* Test 1 (Short lever arm): Try to stop the beam from rotating by pinching it with two fingers just 1 cm away from the center axle. Feel how difficult it is to resist the motor. The motor easily forces its way through your grip.
+* Test 2 (Long lever arm): Place one finger at the very outer tip of the 15-hole beam (far from the center axle) and gently push against the rotation.
+You will find that you can easily stall the motor with a light touch of a single finger.
+
+@step: The engineering trade-off
+Why did the motor stall so easily when you pushed the outer tip?
+Because at the outer tip, your finger had a huge lever arm. Your tiny force was amplified into a large resisting torque at the axle, overcoming the motor's internal power.
+However, look at the trade-off in movement:
+For the motor to move the tip of that long beam by 10 centimeters, the axle only needs to rotate a few degrees.
+Small rotation at the center produces large, fast travel at the tip.
+
+* A long lever gives you high speed and large distance, but low force (low mechanical advantage).
+* A short lever gives you high force and high torque, but low speed and small distance (high mechanical advantage).
+
+@step: The foundation for simple machines
+Every mechanical system you will build in this course—from gearboxes and pulley systems to rack-and-pinion steering—relies on this exact trade-off.
+Whenever you design a robot and realize:
+
+* "My motor is too weak to lift this arm" -> You need to increase mechanical advantage (trade distance/speed to gain torque).
+* "My robot lifts easily, but moves far too slowly" -> You have excess torque and need to trade mechanical advantage for speed.
+In the upcoming lessons, we will build mechanisms like gears and levers to control this balance with mathematical precision.
+
+@module: Module 4 · Speed-up Gearing and Rotational Inertia
+@lesson: Lesson 1 · Building a Top Launcher
+
+@step: The Physics of Speed-up Gearing and Angular Momentum
+Electric motors produce mechanical power as a product of angular velocity and torque. In high-torque robotics applications like drive bases, gear trains step down speed to amplify force. A top launcher reverses this trade-off: it uses step-up gearing to trade motor torque for high rotational velocity.
+To keep a top spinning on a flat surface, the system must store rotational kinetic energy. The moment of inertia depends heavily on the radial distribution of mass away from the rotational axis. A heavy rubber tire positioned at the perimeter maximizes inertia, while an ultra-narrow pivot tip minimizes the contact area and friction against the surface.
+In this build, the launcher also features an integrated remote rocker switch and a passive, gravity-assisted clutch that disengages the spinning top the instant the motor cuts power.
+
+@step: Remote Controller Base
+@parts: 115901:whitex1, 32062:redx2
+The remote controller uses the Control Unit as a base.
+1. Place the Control Unit flat on your desk so the battery door faces down and the two circular push-buttons face up towards the ceiling.
+2. Identify the two red 2L notched axles by feeling the small transverse grooves cut into their cross-ribs.
+3. Push one red axle vertically into the center cross-socket of the left joystick, and the second into the right one. Push them down until they seat firmly.
+
+@step: Seesaw Mechanism
+@parts: 2654:blackx1, 4032a:light-bluish-grayx1, 32001:light-bluish-grayx1, 71752:light-bluish-grayx2
+1. Take the round black 2x2 boat stud plate with the dome-shaped, smooth bottom.
+2. Press the gray round 2x2 plate (identifiable by its 4 top studs and center cross-hole) directly onto the flat top of the boat stud plate.
+3. Take the gray 2x6 plate (containing 5 central holes). Press its middle anti-studs down onto the 4 studs of the round plate to create a T-shaped rocking pivot.
+4. Mount the two gray 2x2 ribbed cube plates (textured with vertical side grills) on top of the plate: one at the far left end, and one at the far right end.
+5. Turn the entire assembly upside down and press it down onto the Control Unit: the cross-holes of the ribbed cubes slide over the two upright red axles you installed in Step 1.
+
+@step: Motor Mounting Pins
+@parts: 118084:whitex1, 61332:blackx2, 3701:whitex1
+The motor housing serves as the structural foundation of the launcher.
+1. Place the Single Motor on your desk with the teal circular hub facing to your left and the side featuring 3 pin holes facing you.
+2. Pick up two black friction pins. Feel the longitudinal friction ridges along each cylindrical half.
+3. Insert the pins into the two outer holes of the 3-hole side row (hole 1 and hole 3), leaving the middle hole open. Half of each pin now extends toward you.
+4. Take the white 1x4 brick (featuring 3 pin holes along its side). Align its side holes with the two protruding pins and press it flush against the motor housing.
+
+@step: Lower Chassis Extension
+@parts: 3003:coralx1, 3007:whitex1
+1. Take the coral 2x2 brick and the long white 2x8 brick.
+2. Snap the 4 rightmost holes of the 2x8 brick underneath the protruding elements you have assembled in the previous step, so that it extends left.
+3. Counting from the left side press the 2x2 brick into second and third column of the 2x8 brick's studs.
+
+@step: Chassis Counterweight and Stability Base
+@parts: 3700:turquoisex1, 3702:light-bluish-grayx1
+1. Rotate the assembly 180° so the opposite side faces you.
+2. Take the turquoise 1x2 brick (containing 1 center hole) and the gray 1x8 brick (containing 7 pin holes).
+3. Place the 1x8 brick horizontally along the bottom front edge of the assembly, extending to the right. Place its 3 leftmost studs into holes underneath the motor's wing.
+4. Counting from right side of the 1x8 grey brick place the 1x2 brick in the second and third holes of the gray one.
+
+@step: The Gearbox Spine
+@parts: 3007:whitex1, 3703:blackx1
+1. Pick up the long black 1x16 brick (containing 15 side pin holes). Put its second hole onto the last stud of the grey brick, so that it extends right along the rotary motor hub. 
+2. Take the long white 2x8 brick and snap it onto the top studs of the motor module, bridging the gap toward the rear support bricks.
+3. 
+4. Mount this 1x16 brick along the top front edge, extending all the way out to the left over the gear support area. Run your finger along the side to verify all 15 holes form a continuous horizontal reference line.
+
+@step: First Stage Gearing: Velocity Multiplication
+@parts: 32073:light-bluish-grayx2, 3713:light-bluish-grayx1, 18575:tanx1, 32498:blackx1
+Identify your axles by laying them alongside the 1x16 brick: an axle 5L measures exactly the width of 5 holes.
+1. Insert one 5L axle through the center cross-socket of the motor's teal rotary hub. Slide a large black 36-tooth double-bevel gear (wide disc with angled perimeter teeth) onto this axle until seated.
+2. Build the intermediate shaft: take the second 5L axle. Slide a gray bushing ring (textured perimeter) onto it, followed by the tan 20-tooth double-bevel gear ( diameter roughly 2.5 studs).
+3. Insert this intermediate axle into the hole adjacent to the motor axle. Mesh the tan 20T gear with the large black 36T gear.
+4. Test the mesh: rotate the motor axle manually by a quarter turn. The intermediate axle should turn faster in the opposite direction ($\\text{Ratio} = \\frac{36}{20} = 1.8\\times$).
+
+@step: Second Stage Compound Gearing
+@parts: 3706:blackx1, 32073:light-bluish-grayx1, 3713:light-bluish-grayx2, 32270:blackx1, 46372:light-bluish-grayx1, 32498:blackx1
+1. Measure the black axle against the beam holes: confirm it spans 6 holes. Slide a bushing and the gray 28-tooth double-bevel gear onto it.
+2. Take another 5L axle. Mount the smallest black 12-tooth bevel gear and the second large black 36-tooth gear onto it.
+3. Insert these two shafts into the successive holes of the 1x16 brick according to the step-up layout. The 36T gear on the intermediate shaft drives the 12T gear, multiplying speed by $3\\times$ ($36:12$).
+4. The final output shaft connects via the compound train to achieve a total speed multiplier of up to $12.6\\times$ relative to the motor rotor. Spin the primary motor gear by hand: the final output shaft should spin with negligible finger pressure at high angular speed.
+
+@step: Top Bridge and Axle Alignment
+@parts: 3702:light-bluish-grayx1, 32555:blackx2, 3673:yellowx1
+Under acceleration, bevel gears generate axial separation forces that push parallel shafts apart. A rigid top bridge prevents gear skip.
+1. Take the yellow smooth pin. Confirm it has a smooth cylindrical surface without friction ridges.
+2. Take the two black 5x5 L-shaped bricks (each leg spanning 5 studs with side holes).
+3. Connect the L-bricks using the gray 1x8 brick to form an overhanging bridge.
+4. Lower the bridge over the protruding ends of the vertical gear axles, ensuring each axle slips smoothly into its corresponding guide hole. Press down firmly until the brick studs snap into place.
+
+@step: Frame Bracing Clamps
+@parts: 32064a:coralx2, 5712:blackx2
+1. Locate the two coral 1x2 bricks with bottom pins.
+2. Insert them vertically into the side joints of the frame to lock the vertical uprights to the lower chassis.
+3. Take the two black angle brackets (with an L-cross section and side wall) and press them onto the exposed outer corners to eliminate torsional play.
+
+@step: Output Drive Socket
+@parts: 7229:coralx1, 2639:whitex2
+1. Locate the coral 1x3 beam. Inspect its holes: the center hole is a cross-shaped axle hole, while the two outer holes are round pin holes.
+2. Slide this beam onto the bottom tip of the high-speed output axle, keeping the beam oriented horizontally. The two round outer holes face downward toward the table—this is your launcher's drive clutch.
+3. Take the two white 4x4 L-shaped corner plates and press them onto the upper frame to form a wide palm-grip handle.
+
+@step: Flywheel Top: Base Spindle
+@parts: 4519:yellowx1, 112175pat0001:blackx1
+1. Pick up the large black wheel with the pre-fitted rubber tire. Feel the heavy, dense outer rim and the 4 central spokes.
+2. Take the yellow 3L axle. Measure it: it spans exactly 3 holes on a brick.
+3. Push the yellow axle straight through the central cross-socket of the wheel until it extends equally on both sides.
+
+@step: Top Drive Pegs and Low-Friction Pivot
+@parts: 59900:coralx1, 32062:redx2
+1. Pick up the coral cone (smooth sloping sides with an open base and a small top stud).
+2. Press the open bottom of the cone firmly onto the bottom end of the yellow axle. The tip of this cone will be the single contact point on the table.
+3. Take the two red 2L notched axles.
+4. Insert them vertically into two opposite spoke holes on the top face of the wheel. They should point upward like two parallel vertical posts.
+
+@step: Mechanical Clutch Docking and Launch Logic
+To dock the top:
+1. Place the top upright on a smooth, flat desk surface, resting on its coral cone tip.
+2. Hold the launcher by its white top plates and lower the coral 1x3 drive beam directly over the top.
+3. Let the two vertical red axles on the wheel slide loosely into the two round outer holes of the 1x3 beam. Notice that they do not snap in: there are no friction ridges or locking pins.
+4. When the motor spins clockwise, the beam pushes against the red axles and spins the flywheel up to maximum angular velocity.
+5. When the motor abruptly decelerates or stops, the top's rotational inertia keeps it spinning. Because the coupling is non-locking, the top unscrews/slips free from the socket, drops vertically by gravity, and spins independently across the surface.
+
+Run the following program in Coding Canvas:
+
+@sample
+When the program starts
+Move forward for 4 steps
+@end
+
+
+
+@step: Lower Support Rail
+@parts: 3700:dark-turquoisex1, 3702:light-bluish-grayx1
+
+1. Take the gray 1x8 Technic brick (\`3702\`, 7 side holes). Place it horizontally in front of the assembly, extending to the left past the teal motor hub.
+
+
+2. Take the dark turquoise 1x2 Technic brick (\`3700\`, 1 center hole). Snap it directly over the seam between the motor hub base and the 1x8 brick.
+
+
+3. Verify by touch that the 7 side holes of the 1x8 brick run parallel to the desk and remain completely unobstructed.
+
+
+
+---
+
+@step: Chassis Base Plate
+@parts: 3003:dark turquoisex1, 2456:light-bluish-grayx1
+
+1. Rotate the entire motor assembly 180° so the opposite side faces you.
+
+
+2. Take the dark turquoise 2x2 brick (\`3003\`) and attach it directly behind the teal motor hub housing.
+
+
+3. Take the long gray 2x6 brick (\`2456\`) and snap it horizontally underneath the bottom of the assembly. This forms a wide, stable foot plate.
+
+
+
+---
+
+@step: Gearbox Structural Spine
+@parts: 3007:whitex1, 3703:blackx1
+
+1. Rotate the chassis so the teal motor hub faces front. Stand the chassis upright so it rests securely on the gray 2x6 foot plate. The motor is now at the bottom right.
+
+
+2. Take the white 2x8 brick (\`3007\`) and snap it vertically onto the upper studs behind the motor body.
+
+
+3. Take the long black 1x16 Technic brick (\`3703\`, 15 side holes).
+
+
+4. Mount this brick horizontally along the upper edge with its studs pointing up, extending from the motor on the right all the way to the left.
+
+
+5. Number the holes from right to left: Hole 1 sits directly above the motor hub; Holes 2 through 15 extend horizontally to the left.
+
+
+
+---
+
+@step: Primary Drive and Output Shafts
+@parts: 32073:light-bluish-grayx2, 3713:light-bluish-grayx1, 18575:tanx1, 32498:blackx1
+1. Take one gray 5L axle (\`32073\`, length of 5 holes). Slide the largest black 36-tooth double-bevel gear (\`32498\`) onto it. Insert this axle through Hole 1 from the front, pushing the axle tip firmly into the motor’s center cross-socket.
+2. Take the second gray 5L axle (\`32073\`). Slide a gray bushing ring (\`3713\`) onto it, followed by the tan 20-tooth double-bevel gear (\`18575\`).
+3. Insert this axle from the back through Hole 10 of the black 1x16 brick. Confirm that 9 empty holes remain between the motor axle at Hole 1 and this output axle at Hole 10.
+
+@step: Speed Multiplication Cluster
+@parts: 3706:blackx1, 32073:light-bluish-grayx1, 3713:light-bluish-grayx2, 32270:blackx1, 46372:light-bluish-grayx1, 32498:blackx1
+1. Take the black 6L axle (\`3706\`, length of 6 holes). Slide a gray bushing (\`3713\`), a black 12-tooth gear (\`32270\`), and a black 36-tooth gear (\`32498\`) onto it.
+2. Insert this axle through Hole 4 from the front. Mesh its small 12-tooth gear with the motor's large 36-tooth gear at Hole 1 ($36:12 = 3\\times$ speed increase).
+3. Take the remaining gray 5L axle (\`32073\`). Slide a gray bushing (\`3713\`), a black 12-tooth gear (\`32270\`), and a gray 28-tooth gear (\`46372\`) onto it.
+4. Insert this axle through Hole 7 from the front. Mesh its 12-tooth gear with the 36-tooth gear from Hole 4 ($3\\times$ increase), while its 28-tooth gear meshes with the tan 20-tooth gear at Hole 10 ($28:20 = 1.4\\times$ increase).
+5. Total gear ratio: $3 \\times 3 \\times 1.4 = 12.6\\times$ rotational speed multiplier. Spin the large motor gear by hand; the axle at Hole 10 should spin smoothly at high speed.
+
+@step: Upper Axle Bridge
+@parts: 3702:light-bluish-grayx1, 32555:blackx2, 3673:yellowx1
+1. Take the yellow smooth pin (\`3673\`) and push it halfway into the corner hole of one black 5x5 L-shaped Technic brick (\`32555\`).
+2. Join the second black 5x5 L-brick symmetrically onto the other half of the pin.
+3. Bridge the two L-bricks using the gray 1x8 Technic brick (\`3702\`) to form a rigid overhanging arch.
+4. Lower this bridge over the tops of the four exposed axles, guiding the axle ends into the matching holes of the arch. Press down until the studs click firmly into place.
+
+@step: Frame Locking Brackets
+@parts: 32064a:coralx2, 5712:blackx2
+1. Take the two coral 1x2 Technic bricks with bottom pins (\`32064a\`). Press them vertically into the side joints of the frame to lock the vertical columns to the base.
+2. Take the two black angle brackets (\`5712\`, 5x1 stud top with a downward side wall). Snap them over the outer structural seams to brace the gearbox against high-speed vibration.
+
+@step: Drive Socket and Hand Grip
+@parts: 7229:dark-turquoisex1, 2639:whitex2
+1. Locate the dark turquoise 1x3 Technic beam (\`7229\`). Verify by touch that the center hole is a cross-shaped axle hole, while the two outer holes are round pin holes.
+2. Slide this beam horizontally onto the bottom tip of the high-speed output axle extending below Hole 10. Its two round pin holes point down toward the desk.
+3. Take the two white 4x4 L-shaped plates (\`2639\`) and press them on top of the frame to form a wide palm handle.
+
+@step: Flywheel Inertia Base
+@parts: 4519:yellowx1, 112175pat0001:blackx1
+1. Pick up the large black wheel with the integrated rubber tire (\`112175pat0001\`). Feel the heavy, dense rubber rim on the outside and the 4 central spokes.
+2. Take the yellow 3L axle (\`4519\`, exactly 3 holes long).
+3. Push the yellow axle through the center cross-socket of the wheel so it extends equally on both sides.
+
+@step: Pivot Tip and Clutch Drive Pegs
+@parts: 59900:dark-turquoisex1, 32062:redx2
+1. Take the dark turquoise cone (\`59900\`, smooth sloping sides, wide base, and small top stud).
+2. Press the open base of the cone firmly onto the bottom tip of the yellow center axle. The narrow point of this cone is the low-friction pivot that rests on the desk.
+3. Take two red 2L notched axles (\`32062\`).
+4. Insert them vertically into opposite spoke holes on the top face of the wheel. They point straight up toward the ceiling like two drive posts.
+
+@step: Docking and Launch Sequence
+1. Place the top upright on a smooth, hard surface, balancing on its turquoise cone tip.
+2. Grasp the launcher by its white palm handle and hold it directly above the top.
+3. Lower the launcher until the two upright red axles on the wheel slide loosely inside the two outer round holes of the dark turquoise 1x3 beam. They should not snap or bind; the connection relies entirely on a passive slip-fit.
+4. Run the code below. The motor spins the gear train up to speed, driving the flywheel. When the motor abruptly stops, the top's rotational inertia carries it forward; it slides out of the socket and spins across the desk.
+
+
+
+@sample
+When the program starts
+Set motor speed to 100%
+Run motor clockwise for 4 rotations
+Stop motor
+@end

@@ -9,6 +9,7 @@
   const STATUS_EVENT = 'tadroid-4ll-status';
   const APPLY_EVENT = 'tadroid-4ll-apply';
   const STORAGE_KEY_PREFIX = 'tadroid-course-progress';
+  const COURSE_SOURCE_STORAGE_KEY = 'tadroid-custom-course-source';
   const QUIET_STATUS_MESSAGES = new Set([
     'Czekam na obszar roboczy Coding Canvas…',
     'Zsynchronizowano z obszarem roboczym.',
@@ -105,6 +106,11 @@
       { ctrlKey: true, shiftKey: true, key: 'y', label: 'Control+Shift+Y' },
       { altKey: true, shiftKey: true, key: 'y', label: 'Alt+Shift+Y' },
     ],
+    uploadCourse: [
+      { metaKey: true, shiftKey: true, key: 'b', label: 'Command+Shift+B' },
+      { ctrlKey: true, shiftKey: true, key: 'b', label: 'Control+Shift+B' },
+      { altKey: true, shiftKey: true, key: 'b', label: 'Alt+Shift+B' },
+    ],
     close: [{ key: 'Escape', label: 'Escape' }],
   };
 
@@ -143,6 +149,9 @@
       lastInsertSignature: '',
       lastInsertAt: 0,
       partsDialogReturnFocus: null,
+      modulePartsDialogReturnFocus: null,
+      courseUploadDialogReturnFocus: null,
+      pendingCourseUpload: null,
     },
   };
 
@@ -171,6 +180,8 @@
         <p class="tadroid-title" data-lesson-module>Wczytywanie kursu…</p>
         <p class="tadroid-subtitle" data-lesson-lesson>Wczytywanie lekcji…</p>
       </div>
+      <button class="tadroid-btn" type="button" data-course-upload-button>Wgraj kurs…</button>
+      <input type="file" accept=".txt,text/plain" data-course-upload-input hidden>
     </div>
     <div class="tadroid-status" data-lesson-status>Wczytywanie treści lekcji…</div>
     <div class="tadroid-lesson-main">
@@ -227,6 +238,31 @@
       <ul class="tadroid-parts-dialog-list" data-parts-dialog-list></ul>
       <div class="tadroid-confirm-actions">
         <button class="tadroid-btn tadroid-btn-primary" type="button" data-parts-dialog-close>Zamknij</button>
+      </div>
+    </dialog>
+    <dialog
+      class="tadroid-confirm-dialog tadroid-parts-dialog tadroid-module-parts-dialog"
+      data-module-parts-dialog
+      role="dialog"
+      aria-labelledby="tadroid-module-parts-dialog-title"
+    >
+      <p class="tadroid-confirm-title" id="tadroid-module-parts-dialog-title" data-module-parts-dialog-title>Potrzebne elementy modułu</p>
+      <div class="tadroid-module-parts-dialog-content" data-module-parts-dialog-content></div>
+      <div class="tadroid-confirm-actions">
+        <button class="tadroid-btn tadroid-btn-primary" type="button" data-module-parts-dialog-close>Zamknij</button>
+      </div>
+    </dialog>
+    <dialog
+      class="tadroid-confirm-dialog"
+      data-course-upload-dialog
+      role="dialog"
+      aria-labelledby="tadroid-course-upload-dialog-title"
+    >
+      <p class="tadroid-confirm-title" id="tadroid-course-upload-dialog-title" data-course-upload-dialog-title>Zastąpić bieżący kurs?</p>
+      <p data-course-upload-dialog-message></p>
+      <div class="tadroid-confirm-actions">
+        <button class="tadroid-btn" type="button" data-course-upload-dialog-cancel>Anuluj</button>
+        <button class="tadroid-btn tadroid-btn-primary" type="button" data-course-upload-dialog-confirm>Wgraj kurs</button>
       </div>
     </dialog>
     <div class="tadroid-sr-only" data-lesson-action-announcer role="status" aria-live="polite" aria-atomic="true" aria-relevant="additions"></div>
@@ -359,6 +395,16 @@
     partsDialogTitle: lessonPanel.querySelector('[data-parts-dialog-title]'),
     partsDialogList: lessonPanel.querySelector('[data-parts-dialog-list]'),
     partsDialogClose: lessonPanel.querySelector('[data-parts-dialog-close]'),
+    modulePartsDialog: lessonPanel.querySelector('[data-module-parts-dialog]'),
+    modulePartsDialogTitle: lessonPanel.querySelector('[data-module-parts-dialog-title]'),
+    modulePartsDialogContent: lessonPanel.querySelector('[data-module-parts-dialog-content]'),
+    modulePartsDialogClose: lessonPanel.querySelector('[data-module-parts-dialog-close]'),
+    courseUploadButton: lessonPanel.querySelector('[data-course-upload-button]'),
+    courseUploadInput: lessonPanel.querySelector('[data-course-upload-input]'),
+    courseUploadDialog: lessonPanel.querySelector('[data-course-upload-dialog]'),
+    courseUploadDialogMessage: lessonPanel.querySelector('[data-course-upload-dialog-message]'),
+    courseUploadDialogCancel: lessonPanel.querySelector('[data-course-upload-dialog-cancel]'),
+    courseUploadDialogConfirm: lessonPanel.querySelector('[data-course-upload-dialog-confirm]'),
     toggle,
     panel,
     meta: panel.querySelector('[data-meta]'),
@@ -648,6 +694,22 @@
     }
   }
 
+  function getModuleStepsWithParts(module) {
+    const steps = [];
+    module?.lessons?.forEach((lesson) => {
+      lesson.steps?.forEach((step) => {
+        if (step.hasParts && step.parts?.length) {
+          steps.push(step);
+        }
+      });
+    });
+    return steps;
+  }
+
+  function moduleHasParts(module) {
+    return Boolean(module?.lessons?.some((lesson) => lesson.steps?.some((step) => step.hasParts && step.parts?.length)));
+  }
+
   function renderLessonOutline() {
     ui.lessonOutlinePanel.innerHTML = '';
     const course = state.lesson.course;
@@ -665,10 +727,29 @@
       const moduleSection = document.createElement('section');
       moduleSection.className = 'tadroid-lesson-outline-section';
 
+      const hasParts = moduleHasParts(module);
+
+      const moduleHeader = document.createElement('div');
+      moduleHeader.className = 'tadroid-lesson-outline-module-header';
+
       const moduleHeading = document.createElement('p');
       moduleHeading.className = 'tadroid-lesson-outline-heading';
       moduleHeading.textContent = module.title;
-      moduleSection.appendChild(moduleHeading);
+      moduleHeader.appendChild(moduleHeading);
+
+      if (hasParts) {
+        const partsButton = document.createElement('button');
+        partsButton.type = 'button';
+        partsButton.className = 'tadroid-lesson-outline-parts-button tadroid-lesson-outline-module-parts-button';
+        partsButton.dataset.lessonModulePartsIndex = String(moduleIndex);
+        partsButton.innerHTML = '<span role="img" aria-label="Elementy">🧱</span>';
+        partsButton.setAttribute('aria-label', `Elementy potrzebne do modułu: ${module.title}`);
+        partsButton.title = `Elementy potrzebne do modułu: ${module.title}`;
+        applyShortcutMetadata(partsButton, SHORTCUTS.viewParts);
+        moduleHeader.appendChild(partsButton);
+      }
+
+      moduleSection.appendChild(moduleHeader);
 
       module.lessons.forEach((lesson, lessonIndex) => {
         const lessonGroup = document.createElement('div');
@@ -754,6 +835,68 @@
     ui.partsDialogList.appendChild(fragment);
   }
 
+  function renderModulePartsDialogContent(module) {
+    ui.modulePartsDialogContent.innerHTML = '';
+    const stepsWithParts = getModuleStepsWithParts(module);
+
+    if (!stepsWithParts.length) {
+      const emptyNote = document.createElement('p');
+      emptyNote.className = 'tadroid-confirm-description';
+      emptyNote.textContent = 'Ten moduł nie wymaga żadnych elementów klocków LEGO.';
+      ui.modulePartsDialogContent.appendChild(emptyNote);
+      return;
+    }
+
+    const fragment = document.createDocumentFragment();
+
+    stepsWithParts.forEach((step) => {
+      const stepGroup = document.createElement('section');
+      stepGroup.className = 'tadroid-module-parts-step-group';
+
+      const stepHeader = document.createElement('p');
+      stepHeader.className = 'tadroid-module-parts-step-title';
+      stepHeader.textContent = `${step.moduleIndex + 1}.${step.lessonIndex + 1}.${step.stepIndex + 1} · ${step.title}`;
+      stepGroup.appendChild(stepHeader);
+
+      const list = document.createElement('ul');
+      list.className = 'tadroid-parts-dialog-list tadroid-module-parts-list';
+
+      step.parts.forEach((part) => {
+        const item = document.createElement('li');
+        item.className = 'tadroid-parts-dialog-item';
+
+        if (part.image) {
+          const image = document.createElement('img');
+          image.className = 'tadroid-parts-dialog-thumb';
+          image.src = chrome.runtime.getURL(part.image);
+          image.alt = '';
+          item.appendChild(image);
+        }
+
+        const copy = document.createElement('div');
+        copy.className = 'tadroid-parts-dialog-copy';
+
+        const name = document.createElement('p');
+        name.className = 'tadroid-parts-dialog-name';
+        name.textContent = `${part.description}`;
+        copy.appendChild(name);
+
+        const meta = document.createElement('p');
+        meta.className = 'tadroid-parts-dialog-meta';
+        meta.textContent = `Potrzebna ilość: ${part.quantity}`;
+        copy.appendChild(meta);
+
+        item.appendChild(copy);
+        list.appendChild(item);
+      });
+
+      stepGroup.appendChild(list);
+      fragment.appendChild(stepGroup);
+    });
+
+    ui.modulePartsDialogContent.appendChild(fragment);
+  }
+
   function closePartsDialog(options = {}) {
     if (!ui.partsDialog.open) return;
     const returnFocus = state.lesson.partsDialogReturnFocus;
@@ -765,14 +908,35 @@
     }
   }
 
+  function closeModulePartsDialog(options = {}) {
+    if (!ui.modulePartsDialog?.open) return;
+    const returnFocus = state.lesson.modulePartsDialogReturnFocus;
+    ui.modulePartsDialog.close();
+    state.lesson.modulePartsDialogReturnFocus = null;
+    if (options.restoreFocus !== false) {
+      const focusTarget = returnFocus?.isConnected ? returnFocus : ui.lessonOutlineTab;
+      setTimeout(() => focusTarget?.focus({ preventScroll: true }), 0);
+    }
+  }
+
   function openPartsDialog(step) {
     if (!step?.hasParts || !step.parts.length) return;
-    if (ui.partsDialog.open) return;
+    if (ui.partsDialog.open || ui.modulePartsDialog?.open) return;
     state.lesson.partsDialogReturnFocus = shadow.activeElement;
     ui.partsDialogTitle.textContent = `Potrzebne elementy`;
     renderPartsDialogList(step.parts);
     ui.partsDialog.showModal();
     ui.partsDialogClose.focus({ preventScroll: true });
+  }
+
+  function openModulePartsDialog(module) {
+    if (!module) return;
+    if (ui.modulePartsDialog.open || ui.partsDialog.open) return;
+    state.lesson.modulePartsDialogReturnFocus = shadow.activeElement;
+    ui.modulePartsDialogTitle.textContent = `Potrzebne elementy: ${module.title}`;
+    renderModulePartsDialogContent(module);
+    ui.modulePartsDialog.showModal();
+    ui.modulePartsDialogClose.focus({ preventScroll: true });
   }
 
   function getPartsDialogTargetStep() {
@@ -787,21 +951,27 @@
     return getCurrentLessonStep();
   }
 
-  function renderLessonError(message) {
+  function renderLessonError(message, options = {}) {
+    const noCourse = Boolean(options.noCourse);
     state.lesson.course = null;
     state.lesson.flatSteps = [];
     ui.lessonCourse.textContent = 'Lekcje TADroid';
-    ui.lessonModule.textContent = 'Kurs niedostępny';
-    ui.lessonLesson.textContent = 'Sprawdź wbudowaną treść kursu';
+    ui.lessonModule.textContent = noCourse ? 'Kurs nie został jeszcze wgrany' : 'Kurs niedostępny';
+    ui.lessonLesson.textContent = noCourse ? 'Wgraj plik z treścią lekcji' : 'Sprawdź treść wgranego pliku kursu';
     updateLessonProgress(0, 0);
-    ui.lessonHeading.textContent = 'Treść kursu niedostępna';
+    ui.lessonHeading.textContent = noCourse ? 'Brak wgranego kursu' : 'Treść kursu niedostępna';
     ui.lessonText.textContent = message;
     ui.lessonSampleWrap.hidden = true;
     ui.lessonTheoryNote.hidden = true;
     ui.lessonOutlineTab.disabled = true;
     setLessonOutlineOpen(false);
-    setLessonStatus('Treść kursu zawiera błędy autorskie.', 'error');
-    setLessonActionStatus('Napraw powyższe błędy w treści lekcji, a następnie przeładuj rozszerzenie.', 'error');
+    setLessonStatus(noCourse ? '' : 'Plik kursu zawiera błędy.', noCourse ? '' : 'error');
+    setLessonActionStatus(
+      noCourse
+        ? 'Użyj przycisku „Wgraj kurs”, aby dodać plik z treścią lekcji.'
+        : 'Popraw plik kursu i wgraj go ponownie.',
+      'error'
+    );
     updateLessonActionAvailability();
   }
 
@@ -875,8 +1045,7 @@
     goToLessonStep(state.lesson.currentStepIndex + delta, options);
   }
 
-  function initializeLessons() {
-    const course = window.TadroidCourse;
+  function applyCourse(course) {
     state.lesson.course = course?.isValid ? course : null;
     state.lesson.flatSteps = course?.flatSteps || [];
     state.lesson.errorText = course?.errorText || '';
@@ -884,8 +1053,13 @@
     state.lesson.progressKey = getLessonProgressKey(course);
     state.lesson.memoryStepIndex = 0;
 
-    if (!course || !course.isValid) {
-      renderLessonError(course?.errorText || 'Nie wczytano żadnych danych kursu.');
+    if (!course) {
+      renderLessonError('Nie wgrano jeszcze żadnego kursu. Użyj przycisku „Wgraj kurs”, aby dodać plik z treścią lekcji.', { noCourse: true });
+      return;
+    }
+
+    if (!course.isValid) {
+      renderLessonError(course.errorText || 'Plik kursu zawiera błędy.');
       return;
     }
 
@@ -897,6 +1071,32 @@
       }
       renderCurrentLessonStep({ announce: false, persist: false });
     });
+  }
+
+  function initializeLessons() {
+    const storageArea = getLessonStorageArea();
+    if (!storageArea?.get) {
+      useInMemoryLessonProgress();
+      applyCourse(null);
+      return;
+    }
+
+    try {
+      storageArea.get([COURSE_SOURCE_STORAGE_KEY], (result) => {
+        if (chrome.runtime?.lastError) {
+          console.warn('[TADroid Lessons] Could not read the uploaded course file.', chrome.runtime.lastError.message);
+          useInMemoryLessonProgress();
+          applyCourse(null);
+          return;
+        }
+        const storedSource = result?.[COURSE_SOURCE_STORAGE_KEY];
+        applyCourse(storedSource ? window.TadroidParseCourse(storedSource) : null);
+      });
+    } catch (error) {
+      console.warn('[TADroid Lessons] Could not read the uploaded course file.', error);
+      useInMemoryLessonProgress();
+      applyCourse(null);
+    }
   }
 
   function insertCurrentLessonSample() {
@@ -3222,6 +3422,77 @@
     setStatus('Zaktualizowano obszar roboczy.');
   }
 
+  function closeCourseUploadDialog(options = {}) {
+    if (!ui.courseUploadDialog.open) return;
+    const returnFocus = state.lesson.courseUploadDialogReturnFocus;
+    ui.courseUploadDialog.close();
+    state.lesson.courseUploadDialogReturnFocus = null;
+    state.lesson.pendingCourseUpload = null;
+    if (options.restoreFocus !== false) {
+      const focusTarget = returnFocus?.isConnected ? returnFocus : ui.courseUploadButton;
+      setTimeout(() => focusTarget?.focus({ preventScroll: true }), 0);
+    }
+  }
+
+  function requestCourseUpload(course, text, fileName) {
+    state.lesson.pendingCourseUpload = { course, text, fileName };
+    ui.courseUploadDialogMessage.textContent = `Kurs „${course.title}” (plik: ${fileName}) zastąpi bieżący kurs i zresetuje postęp ucznia.`;
+    state.lesson.courseUploadDialogReturnFocus = shadow.activeElement;
+    ui.courseUploadDialog.showModal();
+    ui.courseUploadDialogCancel.focus({ preventScroll: true });
+  }
+
+  function confirmCourseUpload() {
+    const pending = state.lesson.pendingCourseUpload;
+    if (!pending) {
+      closeCourseUploadDialog();
+      return;
+    }
+
+    const storageArea = getLessonStorageArea();
+    if (storageArea?.set) {
+      try {
+        storageArea.set({ [COURSE_SOURCE_STORAGE_KEY]: pending.text }, () => {
+          if (chrome.runtime?.lastError) {
+            console.warn('[TADroid Lessons] Could not save the uploaded course file.', chrome.runtime.lastError.message);
+            useInMemoryLessonProgress();
+          }
+        });
+      } catch (error) {
+        console.warn('[TADroid Lessons] Could not save the uploaded course file.', error);
+        useInMemoryLessonProgress();
+      }
+    } else {
+      useInMemoryLessonProgress();
+    }
+
+    closeCourseUploadDialog({ restoreFocus: false });
+    applyCourse(pending.course);
+    setLessonStatus(`Wgrano kurs: „${pending.course.title}”.`);
+    setTimeout(() => ui.lessonHeading.focus({ preventScroll: true }), 0);
+  }
+
+  async function handleCourseFileSelected(file) {
+    if (!file) return;
+
+    let text;
+    try {
+      text = await file.text();
+    } catch (error) {
+      console.warn('[TADroid Lessons] Could not read the selected file.', error);
+      setLessonStatus('Nie udało się odczytać wybranego pliku.', 'error');
+      return;
+    }
+
+    const course = window.TadroidParseCourse(text);
+    if (!course.isValid) {
+      setLessonStatus(course.errorText || 'Plik kursu zawiera błędy.', 'error');
+      return;
+    }
+
+    requestCourseUpload(course, text, file.name);
+  }
+
   function setReaderPanelOpen(isOpen) {
     panel.classList.toggle('tadroid-hidden', !isOpen);
     toggle.textContent = isOpen ? 'Zamknij panel kodu' : 'Otwórz panel kodu';
@@ -3249,6 +3520,8 @@
     }
     if (!state.lesson.isOpen) {
       closePartsDialog({ restoreFocus: false });
+      closeModulePartsDialog({ restoreFocus: false });
+      closeCourseUploadDialog({ restoreFocus: false });
       lessonToggle.focus({ preventScroll: true });
     }
   }
@@ -3327,6 +3600,36 @@
     closeDeleteAllConfirmation();
   });
 
+  ui.courseUploadButton.addEventListener('click', () => {
+    ui.courseUploadInput.click();
+  });
+
+  ui.courseUploadInput.addEventListener('change', () => {
+    const file = ui.courseUploadInput.files?.[0] || null;
+    ui.courseUploadInput.value = '';
+    handleCourseFileSelected(file);
+  });
+
+  ui.courseUploadDialogCancel.addEventListener('click', () => {
+    closeCourseUploadDialog();
+  });
+
+  ui.courseUploadDialogConfirm.addEventListener('click', () => {
+    confirmCourseUpload();
+  });
+
+  ui.courseUploadDialog.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    closeCourseUploadDialog();
+  });
+
+  ui.courseUploadDialog.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    event.preventDefault();
+    event.stopPropagation();
+    closeCourseUploadDialog();
+  });
+
   ui.partsDialogClose.addEventListener('click', () => {
     closePartsDialog();
   });
@@ -3343,6 +3646,22 @@
     closePartsDialog();
   });
 
+  ui.modulePartsDialogClose.addEventListener('click', () => {
+    closeModulePartsDialog();
+  });
+
+  ui.modulePartsDialog.addEventListener('cancel', (event) => {
+    event.preventDefault();
+    closeModulePartsDialog();
+  });
+
+  ui.modulePartsDialog.addEventListener('keydown', (event) => {
+    if (event.key !== 'Escape') return;
+    event.preventDefault();
+    event.stopPropagation();
+    closeModulePartsDialog();
+  });
+
   ui.lessonActions.forEach((button) => {
     button.addEventListener('click', () => {
       handleLessonAction(button.dataset.lessonAction);
@@ -3351,9 +3670,16 @@
 
   ui.lessonOutlinePanel.addEventListener('click', (event) => {
     const target = event.target instanceof Element
-      ? event.target.closest('[data-lesson-step-index], [data-lesson-parts-step-index]')
+      ? event.target.closest('[data-lesson-step-index], [data-lesson-parts-step-index], [data-lesson-module-parts-index]')
       : null;
     if (!target) return;
+
+    if (target.hasAttribute('data-lesson-module-parts-index')) {
+      const moduleIndex = Number(target.getAttribute('data-lesson-module-parts-index'));
+      if (!Number.isInteger(moduleIndex)) return;
+      openModulePartsDialog(state.lesson.course?.modules[moduleIndex]);
+      return;
+    }
 
     if (target.hasAttribute('data-lesson-parts-step-index')) {
       const stepIndex = Number(target.getAttribute('data-lesson-parts-step-index'));
@@ -3441,6 +3767,14 @@
 
     if (matchesAnyShortcut(event, SHORTCUTS.close)) {
       event.preventDefault();
+      if (ui.partsDialog?.open) {
+        closePartsDialog();
+        return;
+      }
+      if (ui.modulePartsDialog?.open) {
+        closeModulePartsDialog();
+        return;
+      }
       const activeElement = shadow.activeElement;
       const lessonHasFocus = Boolean(activeElement && lessonPanel.contains(activeElement));
       if (lessonPanelIsOpen() && (!panelIsOpen() || lessonHasFocus)) {
@@ -3457,8 +3791,25 @@
 
     if (matchesAnyShortcut(event, SHORTCUTS.viewParts) && lessonPanelIsOpen()) {
       event.preventDefault();
+      const activeElement = shadow.activeElement;
+      if (activeElement instanceof Element) {
+        const moduleButton = activeElement.closest('[data-lesson-module-parts-index]');
+        if (moduleButton) {
+          const moduleIndex = Number(moduleButton.getAttribute('data-lesson-module-parts-index'));
+          if (Number.isInteger(moduleIndex) && state.lesson.course?.modules[moduleIndex]) {
+            openModulePartsDialog(state.lesson.course.modules[moduleIndex]);
+            return;
+          }
+        }
+      }
       const targetStep = getPartsDialogTargetStep();
       if (targetStep?.hasParts) openPartsDialog(targetStep);
+      return;
+    }
+
+    if (matchesAnyShortcut(event, SHORTCUTS.uploadCourse) && lessonPanelIsOpen()) {
+      event.preventDefault();
+      ui.courseUploadInput.click();
       return;
     }
 
@@ -3534,6 +3885,7 @@
   });
 
   applyShortcutMetadata(lessonToggle, SHORTCUTS.toggleLesson);
+  applyShortcutMetadata(ui.courseUploadButton, SHORTCUTS.uploadCourse);
   applyShortcutMetadata(toggle, SHORTCUTS.togglePanel);
   applyShortcutMetadata(ui.editorToggle, SHORTCUTS.toggleEditor);
   ui.actions.forEach((button) => applyShortcutMetadata(button, SHORTCUTS[button.dataset.action]));
