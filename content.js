@@ -99,8 +99,24 @@
       { ctrlKey: true, shiftKey: true, key: 'i', label: 'Control+Shift+I' },
       { altKey: true, shiftKey: true, key: 'i', label: 'Alt+Shift+I' },
     ],
-    insertMac: [{ metaKey: true, key: 'Enter', label: 'Command+Enter' }],
-    insertWin: [{ ctrlKey: true, key: 'Enter', label: 'Control+Enter' }],
+    insertSample: [
+      { metaKey: true, shiftKey: true, key: 'Enter', label: 'Command+Shift+Enter' },
+      { ctrlKey: true, shiftKey: true, key: 'Enter', label: 'Control+Shift+Enter' },
+      { altKey: true, shiftKey: true, key: 'Enter', label: 'Alt+Shift+Enter' },
+      { shiftKey: true, key: 'Enter', label: 'Shift+Enter' },
+    ],
+    previousStep: [
+      { metaKey: true, shiftKey: true, key: 'ArrowLeft', label: 'Command+Shift+Left Arrow' },
+      { ctrlKey: true, shiftKey: true, key: 'ArrowLeft', label: 'Control+Shift+Left Arrow' },
+      { altKey: true, shiftKey: true, key: 'ArrowLeft', label: 'Alt+Shift+Left Arrow' },
+      { shiftKey: true, key: 'ArrowLeft', label: 'Shift+Left Arrow' },
+    ],
+    nextStep: [
+      { metaKey: true, shiftKey: true, key: 'ArrowRight', label: 'Command+Shift+Right Arrow' },
+      { ctrlKey: true, shiftKey: true, key: 'ArrowRight', label: 'Control+Shift+Right Arrow' },
+      { altKey: true, shiftKey: true, key: 'ArrowRight', label: 'Alt+Shift+Right Arrow' },
+      { shiftKey: true, key: 'ArrowRight', label: 'Shift+Right Arrow' },
+    ],
     viewParts: [
       { metaKey: true, shiftKey: true, key: 'y', label: 'Command+Shift+Y' },
       { ctrlKey: true, shiftKey: true, key: 'y', label: 'Control+Shift+Y' },
@@ -180,7 +196,7 @@
         <p class="tadroid-title" data-lesson-module>Wczytywanie kursu…</p>
         <p class="tadroid-subtitle" data-lesson-lesson>Wczytywanie lekcji…</p>
       </div>
-      <button class="tadroid-btn" type="button" data-course-upload-button>Wgraj kurs…</button>
+      <button class="tadroid-btn" type="button" data-course-upload-button>Wgraj kurs</button>
       <input type="file" accept=".txt,text/plain" data-course-upload-input hidden>
     </div>
     <div class="tadroid-status" data-lesson-status>Wczytywanie treści lekcji…</div>
@@ -213,11 +229,11 @@
             <div class="tadroid-lesson-sample-copy">
               <p class="tadroid-editor-label">Przykładowy kod</p>
             </div>
-            <button class="tadroid-btn tadroid-btn-primary" type="button" data-lesson-action="insert">Wstaw do projektu</button>
+            <button class="tadroid-btn tadroid-btn-primary" type="button" data-lesson-action="insertSample">Wstaw do projektu</button>
           </div>
           <pre class="tadroid-lesson-sample-text" data-lesson-sample>Ten krok nie ma przypisanego przykładu.</pre>
         </div>
-        <p class="tadroid-theory-note" data-lesson-theory-note hidden>Tylko teoria — ten krok nie zawiera przykładowego kodu.</p>
+        <p class="tadroid-theory-note" data-lesson-theory-note hidden>Tylko teoria (ten krok nie zawiera przykładowego kodu).</p>
         <div class="tadroid-lesson-actions">
           <button class="tadroid-btn" type="button" data-lesson-action="previous">Poprzedni krok</button>
           <button class="tadroid-btn tadroid-btn-primary" type="button" data-lesson-action="next">Następny krok</button>
@@ -467,8 +483,8 @@
   function setComposeStatus(message, tone = '') {
     const normalized = String(message || '').trim();
     const isError = tone === 'error';
-    ui.composeStatus.hidden = !isError;
-    ui.composeStatus.textContent = isError ? normalized : '';
+    ui.composeStatus.hidden = !normalized;
+    ui.composeStatus.textContent = normalized;
     ui.composeStatus.classList.toggle('tadroid-editor-status-error', isError);
     if (!isError && normalized) announceOperation(ui.composeAnnouncer, normalized);
     if (!isError && !normalized) clearOperationAnnouncement(ui.composeAnnouncer);
@@ -484,8 +500,8 @@
   function setLessonActionStatus(message, tone = '') {
     const normalized = String(message || '').trim();
     const isError = tone === 'error';
-    ui.lessonActionStatus.hidden = !isError;
-    ui.lessonActionStatus.textContent = isError ? normalized : '';
+    ui.lessonActionStatus.hidden = !normalized;
+    ui.lessonActionStatus.textContent = normalized;
     ui.lessonActionStatus.classList.toggle('tadroid-editor-status-error', isError);
     if (!isError && normalized) announceOperation(ui.lessonActionAnnouncer, normalized);
     if (!isError && !normalized) clearOperationAnnouncement(ui.lessonActionAnnouncer);
@@ -506,7 +522,7 @@
   }
 
   function applyShortcutMetadata(element, ...definitions) {
-    if (!element) return;
+    if (!element || typeof element.setAttribute !== 'function') return;
     const shortcutText = describeShortcut(...definitions);
     if (!shortcutText) return;
     const ariaShortcuts = flattenShortcutDefinitions(definitions)
@@ -521,15 +537,15 @@
       })
       .join(' ');
     element.setAttribute('aria-keyshortcuts', ariaShortcuts);
-    element.title = `${element.textContent || element.getAttribute('aria-label') || 'Akcja'} (${shortcutText})`;
+    element.title = `${element.textContent || element.getAttribute?.('aria-label') || 'Akcja'} (${shortcutText})`;
   }
 
   function matchesShortcut(event, definition) {
-    if (!definition) return false;
-    return Boolean(definition.altKey) === event.altKey &&
-      Boolean(definition.ctrlKey) === event.ctrlKey &&
-      Boolean(definition.metaKey) === event.metaKey &&
-      Boolean(definition.shiftKey) === event.shiftKey &&
+    if (!definition || !event) return false;
+    return Boolean(definition.altKey) === Boolean(event.altKey) &&
+      Boolean(definition.ctrlKey) === Boolean(event.ctrlKey) &&
+      Boolean(definition.metaKey) === Boolean(event.metaKey) &&
+      Boolean(definition.shiftKey) === Boolean(event.shiftKey) &&
       String(event.key || '').toLowerCase() === String(definition.key || '').toLowerCase();
   }
 
@@ -657,7 +673,6 @@
     const currentStep = getCurrentLessonStep();
     const hasCourse = Boolean(state.lesson.course && state.lesson.flatSteps.length);
     const hasSample = Boolean(currentStep?.sampleText?.trim());
-    const readerIsOpen = panelIsOpen();
 
     ui.lessonActions.forEach((button) => {
       const action = button.dataset.lessonAction;
@@ -669,8 +684,8 @@
         button.disabled = !hasCourse || state.lesson.currentStepIndex >= state.lesson.flatSteps.length - 1;
         return;
       }
-      if (action === 'insert') {
-        button.disabled = !hasCourse || !hasSample || !readerIsOpen;
+      if (action === 'insertSample') {
+        button.disabled = !hasCourse || !hasSample;
       }
     });
   }
@@ -1110,11 +1125,8 @@
       return;
     }
     if (!state.ast) {
+      requestProject({ force: true });
       setLessonActionStatus('Otwórz lub utwórz projekt Coding Canvas przed wstawieniem tego przykładu.', 'error');
-      return;
-    }
-    if (!panelIsOpen()) {
-      setLessonActionStatus('Otwórz panel kodu przed wstawieniem przykładu z lekcji, aby móc przejrzeć lub cofnąć zmiany.', 'error');
       return;
     }
 
@@ -1130,10 +1142,15 @@
 
     state.lesson.lastInsertSignature = insertSignature;
     state.lesson.lastInsertAt = now;
-    appendCommandsToProject(currentStep.sampleText, {
+    const result = appendCommandsToProject(currentStep.sampleText, {
       statusTarget: 'lesson',
       missingProjectMessage: 'Otwórz lub utwórz projekt Coding Canvas przed wstawieniem tego przykładu.',
     });
+
+    if (!result || !result.ok) {
+      state.lesson.lastInsertSignature = '';
+      state.lesson.lastInsertAt = 0;
+    }
   }
 
   function getAvailableSounds() {
@@ -2297,10 +2314,10 @@
         }
       }
 
-      match = cleaned.match(/^start\s+the\s+motor\s+at\s+power\s+([\d.-]+)$/i);
+      match = cleaned.match(/^start\s+(?:the\s+)?motor\s+at\s+power\s+([\d.-]+)%?$/i);
       if (match) { commands.push({ type: 'motorStartAtPower', value: Number(match[1]) }); return; }
 
-      match = cleaned.match(/^start\s+the\s+motor\s+(clockwise|counterclockwise)$/i);
+      match = cleaned.match(/^start\s+(?:the\s+)?motor\s+(clockwise|counterclockwise)$/i);
       if (match) {
         const direction = parseMotorGesture(match[1]);
         if (direction) {
@@ -2309,23 +2326,23 @@
         }
       }
 
-      if (lower === 'stop the motor') {
+      if (lower === 'stop the motor' || lower === 'stop motor') {
         commands.push({ type: 'motorStop' });
         return;
       }
 
-      match = cleaned.match(/^set\s+the\s+motor\s+speed\s+to\s+([\d.-]+)$/i);
+      match = cleaned.match(/^set\s+(?:the\s+)?motor\s+speed\s+to\s+([\d.-]+)%?$/i);
       if (match) { commands.push({ type: 'motorSetSpeed', value: Number(match[1]) }); return; }
 
-      match = cleaned.match(/^set\s+the\s+motor\s+acceleration\s+to\s+(fast|normal|slow)$/i);
+      match = cleaned.match(/^set\s+(?:the\s+)?motor\s+acceleration\s+to\s+(fast|normal|slow)$/i);
       if (match) { const value = parseMotorAcceleration(match[1]); if (value) { commands.push({ type: 'motorSetAcceleration', value }); return; } }
 
-      match = cleaned.match(/^set\s+the\s+motor\s+end\s+state\s+to\s+(smart brake|smart coast|brake|coast|hold|continue)$/i);
+      match = cleaned.match(/^set\s+(?:the\s+)?motor\s+end\s+state\s+to\s+(smart brake|smart coast|brake|coast|hold|continue)$/i);
       if (match) { const endState = parseEndState(match[1]); if (endState) { commands.push({ type: 'motorSetEndstate', endState }); return; } }
 
-      if (lower === 'reset the motor rotations counted') { commands.push({ type: 'motorSetRotationsCounted' }); return; }
+      if (lower === 'reset the motor rotations counted' || lower === 'reset motor rotations counted') { commands.push({ type: 'motorSetRotationsCounted' }); return; }
 
-      match = cleaned.match(/^run\s+the\s+motor\s+(clockwise|counterclockwise)\s+for\s+([\d.-]+)\s+(rotation|rotations)$/i);
+      match = cleaned.match(/^run\s+(?:the\s+)?motor\s+(clockwise|counterclockwise)\s+for\s+([\d.-]+)\s+(rotation|rotations)$/i);
       if (match) {
         const direction = parseMotorGesture(match[1]);
         if (direction) {
@@ -2339,7 +2356,7 @@
         }
       }
 
-      match = cleaned.match(/^run\s+the\s+(left|right)\s+motor\s+(clockwise|counterclockwise)\s+for\s+([\d.-]+)\s+(rotation|rotations)$/i);
+      match = cleaned.match(/^run\s+(?:the\s+)?(left|right)\s+motor\s+(clockwise|counterclockwise)\s+for\s+([\d.-]+)\s+(rotation|rotations)$/i);
       if (match) {
         const direction = parseMotorGesture(match[2]);
         if (direction) {
@@ -2354,7 +2371,7 @@
         }
       }
 
-      match = cleaned.match(/^start\s+the\s+(left|right)\s+motor\s+(clockwise|counterclockwise)$/i);
+      match = cleaned.match(/^start\s+(?:the\s+)?(left|right)\s+motor\s+(clockwise|counterclockwise)$/i);
       if (match) {
         const direction = parseMotorGesture(match[2]);
         if (direction) {
@@ -2367,7 +2384,7 @@
         }
       }
 
-      match = cleaned.match(/^stop\s+the\s+(left|right)\s+motor$/i);
+      match = cleaned.match(/^stop\s+(?:the\s+)?(left|right)\s+motor$/i);
       if (match) {
         commands.push({
           type: 'doubleMotorStop',
@@ -2376,7 +2393,7 @@
         return;
       }
 
-      match = cleaned.match(/^set\s+the\s+(left|right)\s+motor\s+speed\s+to\s+([\d.-]+)$/i);
+      match = cleaned.match(/^set\s+(?:the\s+)?(left|right)\s+motor\s+speed\s+to\s+([\d.-]+)%?$/i);
       if (match) {
         commands.push({
           type: 'doubleMotorSetSpeed',
@@ -2386,25 +2403,25 @@
         return;
       }
 
-      match = cleaned.match(/^start\s+the\s+(left|right)\s+motor\s+at\s+power\s+([\d.-]+)$/i);
+      match = cleaned.match(/^start\s+(?:the\s+)?(left|right)\s+motor\s+at\s+power\s+([\d.-]+)%?$/i);
       if (match) { commands.push({ type: 'doubleMotorStartAtPower', motor: match[1].toUpperCase(), value: Number(match[2]) }); return; }
 
-      match = cleaned.match(/^set\s+the\s+(left|right)\s+motor\s+acceleration\s+to\s+(fast|normal|slow)$/i);
+      match = cleaned.match(/^set\s+(?:the\s+)?(left|right)\s+motor\s+acceleration\s+to\s+(fast|normal|slow)$/i);
       if (match) { const value = parseMotorAcceleration(match[2]); if (value) { commands.push({ type: 'doubleMotorSetAcceleration', motor: match[1].toUpperCase(), value }); return; } }
 
-      match = cleaned.match(/^set\s+the\s+(left|right)\s+motor\s+end\s+state\s+to\s+(smart brake|smart coast|brake|coast|hold|continue)$/i);
+      match = cleaned.match(/^set\s+(?:the\s+)?(left|right)\s+motor\s+end\s+state\s+to\s+(smart brake|smart coast|brake|coast|hold|continue)$/i);
       if (match) { const endState = parseEndState(match[2]); if (endState) { commands.push({ type: 'doubleMotorSetEndstate', motor: match[1].toUpperCase(), endState }); return; } }
 
-      match = cleaned.match(/^reset\s+the\s+(left|right)\s+motor\s+rotations\s+counted$/i);
+      match = cleaned.match(/^reset\s+(?:the\s+)?(left|right)\s+motor\s+rotations\s+counted$/i);
       if (match) { commands.push({ type: 'doubleMotorSetRotationsCounted', motor: match[1].toUpperCase() }); return; }
 
-      match = cleaned.match(/^set\s+the\s+turn\s+steering\s+to\s+([\d.-]+)$/i);
+      match = cleaned.match(/^set\s+(?:the\s+)?turn\s+steering\s+to\s+([\d.-]+)$/i);
       if (match) { commands.push({ type: 'doubleMotorSetTurnSteering', value: Number(match[1]) }); return; }
 
-      match = cleaned.match(/^start\s+driving\s+with\s+left\s+speed\s+([\d.-]+)\s+and\s+right\s+speed\s+([\d.-]+)$/i);
+      match = cleaned.match(/^start\s+driving\s+with\s+left\s+speed\s+([\d.-]+)%?\s+and\s+right\s+speed\s+([\d.-]+)%?$/i);
       if (match) { commands.push({ type: 'doubleMotorStartDualSpeed', left: Number(match[1]), right: Number(match[2]) }); return; }
 
-      if (lower === 'reset the double motor yaw') { commands.push({ type: 'doubleMotorResetYaw' }); return; }
+      if (lower === 'reset the double motor yaw' || lower === 'reset double motor yaw') { commands.push({ type: 'doubleMotorResetYaw' }); return; }
 
       if (lower === 'stop this script') {
         commands.push({ type: 'controlStop', mode: 'STACK' });
@@ -2629,7 +2646,7 @@
         : samples.controlRepeat;
     } else if (normalizedLine.startsWith('if ')) {
       reason = /^if\s+(reflection|hue|saturation|brightness|left\s+lever\s+angle|right\s+lever\s+angle|left\s+lever\s+position|right\s+lever\s+position)\s+/.test(normalizedLine) ? samples.sensorCompare : samples.controlIf;
-    } else if (/^(start\s+the\s+motor|stop\s+the\s+motor|set\s+the\s+motor|reset\s+the\s+motor|run\s+the\s+motor|run\s+the\s+(left|right)\s+motor|start\s+the\s+(left|right)\s+motor|stop\s+the\s+(left|right)\s+motor|set\s+the\s+(left|right)\s+motor|reset\s+the\s+(left|right)\s+motor|set\s+the\s+turn\s+steering|start\s+driving\s+with\s+left\s+speed|reset\s+the\s+double\s+motor\s+yaw)/.test(normalizedLine)) {
+    } else if (/^(start\s+(?:the\s+)?motor|stop\s+(?:the\s+)?motor|set\s+(?:the\s+)?motor|reset\s+(?:the\s+)?motor|run\s+(?:the\s+)?motor|run\s+(?:the\s+)?(left|right)\s+motor|start\s+(?:the\s+)?(left|right)\s+motor|stop\s+(?:the\s+)?(left|right)\s+motor|set\s+(?:the\s+)?(left|right)\s+motor|reset\s+(?:the\s+)?(left|right)\s+motor|set\s+(?:the\s+)?turn\s+steering|start\s+driving\s+with\s+left\s+speed|reset\s+(?:the\s+)?double\s+motor\s+yaw)/.test(normalizedLine)) {
       reason = samples.motor;
     } else if (/^(if|wait until|repeat until)\s+the\s+double\s+motor\s+is\s+tilted\s+/.test(normalizedLine)) {
       reason = samples.tilted;
@@ -3284,7 +3301,16 @@
     }
 
     if (scripts.length) {
-      state.ast.scripts.push(...cloneJson(scripts));
+      if (
+        state.ast.scripts.length === 1 &&
+        state.ast.scripts[0].trigger?.kind === 'programStart' &&
+        (!state.ast.scripts[0].body || state.ast.scripts[0].body.length === 0) &&
+        scripts[0].trigger?.kind === 'programStart'
+      ) {
+        state.ast.scripts = cloneJson(scripts);
+      } else {
+        state.ast.scripts.push(...cloneJson(scripts));
+      }
     }
 
     const project = buildProjectFromAst();
@@ -3511,11 +3537,14 @@
     lessonPanel.classList.toggle('tadroid-hidden', !state.lesson.isOpen);
     lessonToggle.textContent = state.lesson.isOpen ? 'Zamknij panel kursu' : 'Otwórz panel kursu';
     applyShortcutMetadata(lessonToggle, SHORTCUTS.toggleLesson);
-    if (state.lesson.isOpen && options.focus !== false) {
-      if (state.lesson.outlineOpen) {
-        ui.lessonOutlineTab.focus({ preventScroll: true });
-      } else {
-        ui.lessonHeading.focus({ preventScroll: true });
+    if (state.lesson.isOpen) {
+      requestProject();
+      if (options.focus !== false) {
+        if (state.lesson.outlineOpen) {
+          ui.lessonOutlineTab.focus({ preventScroll: true });
+        } else {
+          ui.lessonHeading.focus({ preventScroll: true });
+        }
       }
     }
     if (!state.lesson.isOpen) {
@@ -3562,7 +3591,7 @@
     switch (action) {
       case 'previous': moveLessonStep(-1); break;
       case 'next': moveLessonStep(1, { focusHeading: true }); break;
-      case 'insert': insertCurrentLessonSample(); break;
+      case 'insertSample': insertCurrentLessonSample(); break;
     }
   }
 
@@ -3711,7 +3740,7 @@
   });
 
   ui.composeInput.addEventListener('keydown', (event) => {
-    if ((event.metaKey || event.ctrlKey) && event.key === 'Enter') {
+    if ((event.metaKey || event.ctrlKey) && !event.shiftKey && event.key === 'Enter') {
       event.preventDefault();
       appendCommandsToProject(ui.composeInput.value);
     }
@@ -3789,28 +3818,48 @@
       return;
     }
 
-    if (matchesAnyShortcut(event, SHORTCUTS.viewParts) && lessonPanelIsOpen()) {
-      event.preventDefault();
-      const activeElement = shadow.activeElement;
-      if (activeElement instanceof Element) {
-        const moduleButton = activeElement.closest('[data-lesson-module-parts-index]');
-        if (moduleButton) {
-          const moduleIndex = Number(moduleButton.getAttribute('data-lesson-module-parts-index'));
-          if (Number.isInteger(moduleIndex) && state.lesson.course?.modules[moduleIndex]) {
-            openModulePartsDialog(state.lesson.course.modules[moduleIndex]);
-            return;
+    if (lessonPanelIsOpen()) {
+      if (matchesAnyShortcut(event, SHORTCUTS.viewParts)) {
+        event.preventDefault();
+        const activeElement = shadow.activeElement;
+        if (activeElement instanceof Element) {
+          const moduleButton = activeElement.closest('[data-lesson-module-parts-index]');
+          if (moduleButton) {
+            const moduleIndex = Number(moduleButton.getAttribute('data-lesson-module-parts-index'));
+            if (Number.isInteger(moduleIndex) && state.lesson.course?.modules[moduleIndex]) {
+              openModulePartsDialog(state.lesson.course.modules[moduleIndex]);
+              return;
+            }
           }
         }
+        const targetStep = getPartsDialogTargetStep();
+        if (targetStep?.hasParts) openPartsDialog(targetStep);
+        return;
       }
-      const targetStep = getPartsDialogTargetStep();
-      if (targetStep?.hasParts) openPartsDialog(targetStep);
-      return;
-    }
 
-    if (matchesAnyShortcut(event, SHORTCUTS.uploadCourse) && lessonPanelIsOpen()) {
-      event.preventDefault();
-      ui.courseUploadInput.click();
-      return;
+      if (matchesAnyShortcut(event, SHORTCUTS.uploadCourse)) {
+        event.preventDefault();
+        ui.courseUploadInput.click();
+        return;
+      }
+
+      if (matchesAnyShortcut(event, SHORTCUTS.previousStep)) {
+        event.preventDefault();
+        handleLessonAction('previous');
+        return;
+      }
+
+      if (matchesAnyShortcut(event, SHORTCUTS.nextStep)) {
+        event.preventDefault();
+        handleLessonAction('next');
+        return;
+      }
+
+      if (matchesAnyShortcut(event, SHORTCUTS.insertSample)) {
+        event.preventDefault();
+        handleLessonAction('insertSample');
+        return;
+      }
     }
 
     if (!panelIsOpen()) return;
@@ -3833,7 +3882,7 @@
       handlePrimaryAction('pause');
       return;
     }
-    if (matchesAnyShortcut(event, SHORTCUTS['previous-line']) || matchesAnyShortcut(event, SHORTCUTS.previousLine)) {
+    if (matchesAnyShortcut(event, SHORTCUTS.previousLine)) {
       event.preventDefault();
       handlePrimaryAction('previous-line');
       return;
@@ -3878,9 +3927,15 @@
       handleEditorAction('delete-all');
       return;
     }
-    if (matchesAnyShortcut(event, SHORTCUTS.insert) || matchesAnyShortcut(event, SHORTCUTS.insertMac) || matchesAnyShortcut(event, SHORTCUTS.insertWin)) {
+    if (matchesAnyShortcut(event, SHORTCUTS.insert)) {
       event.preventDefault();
       handleEditorAction('insert');
+      return;
+    }
+    if (matchesAnyShortcut(event, SHORTCUTS.insertSample)) {
+      event.preventDefault();
+      handleLessonAction('insertSample');
+      return;
     }
   });
 
@@ -3891,12 +3946,20 @@
   ui.actions.forEach((button) => applyShortcutMetadata(button, SHORTCUTS[button.dataset.action]));
   ui.editorActions.forEach((button) => {
     const action = button.dataset.editorAction;
-    if (action === 'insert') {
-      applyShortcutMetadata(button, SHORTCUTS.insert, SHORTCUTS.insertMac, SHORTCUTS.insertWin);
-      return;
-    }
     if (action === 'delete-all') {
       applyShortcutMetadata(button, SHORTCUTS.deleteAll);
+      return;
+    }
+    applyShortcutMetadata(button, SHORTCUTS[action]);
+  });
+  ui.lessonActions.forEach((button) => {
+    const action = button.dataset.lessonAction;
+    if (action === 'previous') {
+      applyShortcutMetadata(button, SHORTCUTS.previousStep);
+      return;
+    }
+    if (action === 'next') {
+      applyShortcutMetadata(button, SHORTCUTS.nextStep);
       return;
     }
     applyShortcutMetadata(button, SHORTCUTS[action]);

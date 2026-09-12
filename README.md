@@ -21,7 +21,7 @@ Po zainstalowaniu wtyczki w rogach ekranu pojawią się dwa przyciski otwierają
 
 ## Korzystanie z panelu kursu
 
-Otwórz go klikając przycisk w lewym dolnym rogu lub wciskając **Shift+K**. Jego nagłówek pokazuje, w którym module i lekcji aktualnie jesteś. Poniżej znajdziesz dwie zakładki:
+Otwórz go klikając przycisk w lewym dolnym rogu lub wciskając **Shift+K**. 
 
 ### Wgrywanie własnego kursu
 Panel kursu wymaga wgrania treści jako pliku tekstowego:
@@ -33,10 +33,12 @@ Panel kursu wymaga wgrania treści jako pliku tekstowego:
 * Jeśli plik zawiera błędy, zobaczysz komunikat z numerem linii, w której wystąpił problem.
 * Wgrany kurs i postęp są zapamiętywane w przeglądarce, więc zostają zachowane po odświeżeniu strony.
 
+Po wgraniu kursu poniżej nagłówka panelu znajdziesz dwie zakładki:
+
 ### Karta Lekcja
 * Zawiera treść kroku.
-* **Przycisk „Wstaw przykład”:** Jeśli w danym kroku jest przykładowy kod, kliknij ten przycisk (lub użyj skrótu), a bloki same wskoczą do bieżącego projektu. 
-* **Nawigacja:** Przyciski **Poprzedni krok** i **Następny krok** pozwalają swobodnie przechodzić przez kurs.
+* **Przycisk „Wstaw przykład” (Shift+Enter):** Jeśli w danym kroku jest przykładowy kod, kliknij ten przycisk (lub użyj skrótu), a bloki same wskoczą do bieżącego projektu. 
+* **Nawigacja (Shift+Lewo / Shift+Prawo):** Przyciski **Poprzedni krok** i **Następny krok** pozwalają swobodnie przechodzić przez kurs.
 * **Automatyczny zapis:** Twój postęp zapisuje się na bieżąco w przeglądarce. Możesz zamknąć stronę i wrócić do nauki w dowolnym momencie.
 
 ### Karta Konspekt kursu
@@ -77,24 +79,27 @@ Wszystkie interakcje posiadają pełne wsparcie klawiatury. Klawiszem modyfikuj�
 * **Alt** lub **Ctrl** (system Windows / Linux)
 * **Command** (system macOS)
 
-| Skrót                              | Działanie |
-|------------------------------------| --- |
-| Shift+K                            | Otwórz/zamknij panel lekcji |
-| Shift+B                            | Wgraj plik z kursem |
-| Shift+O                            | Otwórz/zamknij panel kodu |
+| Skrót                              | Działanie                                     |
+|------------------------------------|-----------------------------------------------|
+| Shift+K                            | Otwórz/zamknij panel lekcji                   |
+| Shift+B                            | Wgraj plik z kursem                           |
+| Shift+O                            | Otwórz/zamknij panel kodu                     |
 | Shift+U                            | Otwórz/zamknij Narzędzia edycji w panelu kodu |
-| Shift+S                            | Czytaj bieżący projekt na głos |
-| Shift+P                            | Wstrzymaj/wznów czytanie |
-| Shift+J                            | Poprzednia linia |
-| Shift+L                            | Pomiń linię |
-| Shift+X                            | Zatrzymaj czytanie |
-| Shift+R                            | Odśwież panel kodu |
-| Shift+Góra / Shift+Dół / Shift+End | Przesuń punkt wstawiania |
-| Shift+Backspace                    | Usuń poprzedni krok |
-| Shift+D                            | Usuń cały kod |
-| Shift+Y                            | Otwórz listę elementów dla bieżącego kroku |
-| Command/Control+Enter              | Wstaw wpisane polecenie do projektu |
-| Escape                             | Zamknij aktualnie otwarte okno dialogowe |
+| Shift+I                            | Wstaw wpisane polecenie do projektu           |
+| Shift+S                            | Czytaj bieżący projekt na głos                |
+| Shift+P                            | Wstrzymaj/wznów czytanie                      |
+| Shift+J                            | Poprzednia linia                              |
+| Shift+L                            | Pomiń linię                                   |
+| Shift+X                            | Zatrzymaj czytanie                            |
+| Shift+R                            | Odśwież panel kodu                            |
+| Shift+Góra / Shift+Dół / Shift+End | Przesuń punkt wstawiania                      |
+| Shift+Backspace                    | Usuń poprzedni krok                           |
+| Shift+D                            | Usuń cały kod                                 |
+| Shift+Y                            | Otwórz listę elementów dla bieżącego kroku    |
+| Shift+Lewo                         | Poprzedni krok w kursie                       |
+| Shift+Prawo                        | Następny krok w kursie                        |
+| Shift+Enter                        | Wstaw fragment kodu z panelu kursu            |
+| Escape                             | Zamknij aktualnie otwarte okno dialogowe      |
 
 ---
 LEGO® is a trademark of the LEGO Group of companies which does not sponsor, authorize or endorse this project.
