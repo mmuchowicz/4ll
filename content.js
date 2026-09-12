@@ -127,6 +127,9 @@
       { ctrlKey: true, shiftKey: true, key: 'b', label: 'Control+Shift+B' },
       { altKey: true, shiftKey: true, key: 'b', label: 'Alt+Shift+B' },
     ],
+    editLine: [
+      { key: ' ', label: 'Podwójna spacja' },
+    ],
     close: [{ key: 'Escape', label: 'Escape' }],
   };
 
@@ -135,16 +138,20 @@
     ast: null,
     text: '',
     lines: [],
+    lineMap: [],
     speech: {
       active: false,
       paused: false,
       index: 0,
+      highlightedIndex: -1,
       timeoutId: null,
       rate: 1,
       voice: null,
       skipPending: false,
       skipToIndex: null,
     },
+    inlineEdit: null,
+    lastSpacePressTime: 0,
     editor: {
       insertionPoints: [],
       insertionIndex: -1,
@@ -196,7 +203,14 @@
         <p class="tadroid-title" data-lesson-module>Wczytywanie kursu…</p>
         <p class="tadroid-subtitle" data-lesson-lesson>Wczytywanie lekcji…</p>
       </div>
-      <button class="tadroid-btn" type="button" data-course-upload-button>Wgraj kurs</button>
+      <button class="tadroid-icon-btn" type="button" data-course-upload-button aria-label="Wgraj plik .txt">
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="12" y1="18" x2="12" y2="12"></line>
+          <polyline points="9 15 12 12 15 15"></polyline>
+        </svg>
+      </button>
       <input type="file" accept=".txt,text/plain" data-course-upload-input hidden>
     </div>
     <div class="tadroid-status" data-lesson-status>Wczytywanie treści lekcji…</div>
@@ -235,8 +249,8 @@
         </div>
         <p class="tadroid-theory-note" data-lesson-theory-note hidden>Tylko teoria (ten krok nie zawiera przykładowego kodu).</p>
         <div class="tadroid-lesson-actions">
-          <button class="tadroid-btn" type="button" data-lesson-action="previous">Poprzedni krok</button>
           <button class="tadroid-btn tadroid-btn-primary" type="button" data-lesson-action="next">Następny krok</button>
+          <button class="tadroid-btn" type="button" data-lesson-action="previous">Poprzedni krok</button>
         </div>
         <div class="tadroid-editor-status tadroid-lesson-action-status" data-lesson-action-status role="alert" hidden></div>
       </div>
@@ -301,7 +315,12 @@
         <p class="tadroid-title">Panel kodu</p>
         <p class="tadroid-subtitle">Okno do odczytu i analizy kodu w bieżącym projekcie</p>
       </div>
-      <button class="tadroid-icon-btn" type="button" data-action="refresh">Odśwież</button>
+      <button class="tadroid-icon-btn" type="button" data-action="refresh" aria-label="Odśwież">
+        <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+          <polyline points="23 4 23 10 17 10"></polyline>
+          <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+        </svg>
+      </button>
     </div>
     <div class="tadroid-reader-body">
       <div class="tadroid-main">
@@ -537,7 +556,8 @@
       })
       .join(' ');
     element.setAttribute('aria-keyshortcuts', ariaShortcuts);
-    element.title = `${element.textContent || element.getAttribute?.('aria-label') || 'Akcja'} (${shortcutText})`;
+    const label = element.getAttribute?.('aria-label') || element.textContent?.trim() || 'Akcja';
+    element.title = `${label} (${shortcutText})`;
   }
 
   function matchesShortcut(event, definition) {
@@ -1586,6 +1606,10 @@
       lineElement.className = 'tadroid-text-line';
       lineElement.dataset.speechLine = String(index);
       lineElement.textContent = line || '\u00a0';
+      lineElement.addEventListener('click', () => {
+        if (state.inlineEdit?.active) return;
+        setSpeechLineHighlight(index);
+      });
       fragment.appendChild(lineElement);
     });
     ui.text.replaceChildren(fragment);
@@ -1598,9 +1622,16 @@
       currentLine.removeAttribute('aria-current');
     }
 
-    if (!Number.isInteger(index) || index < 0) return;
+    if (!Number.isInteger(index) || index < 0) {
+      state.speech.highlightedIndex = -1;
+      return;
+    }
     const nextLine = ui.text.querySelector(`[data-speech-line="${index}"]`);
-    if (!nextLine) return;
+    if (!nextLine) {
+      state.speech.highlightedIndex = -1;
+      return;
+    }
+    state.speech.highlightedIndex = index;
     nextLine.classList.add('tadroid-text-line-active');
     nextLine.setAttribute('aria-current', 'true');
     nextLine.scrollIntoView({ block: 'nearest', inline: 'nearest' });
@@ -1629,18 +1660,96 @@
     ui.meta.textContent = `Projekt: ${state.ast.name}. Znalezione skrypty: ${scripts.length}.`;
   }
 
+  function buildProjectLines(ast) {
+    if (!ast) return { text: '', lines: [], lineMap: [] };
+    const scripts = ast.scripts || [];
+    const lines = [];
+    const lineMap = [];
+
+    scripts.forEach((script, scriptIndex) => {
+      const triggerText = `Script ${scriptIndex + 1}: ${triggerToText(script.trigger)}`;
+      lines.push(triggerText);
+      lineMap.push({
+        type: 'trigger',
+        scriptIndex,
+        trigger: script.trigger,
+        editableText: triggerToText(script.trigger),
+      });
+
+      function visitStatements(statements, path, prefix) {
+        if (!statements || !statements.length) return false;
+        statements.forEach((statement, statementIndex) => {
+          const currentPrefix = prefix ? `${prefix}.${statementIndex + 1}` : `${statementIndex + 1}`;
+          const line = statementToLine(statement);
+          lines.push(`${currentPrefix}: ${line.text}`);
+          lineMap.push({
+            type: 'statement',
+            scriptIndex,
+            path: clonePath(path),
+            statementIndex,
+            statement,
+            editableText: line.text,
+          });
+
+          if (statement.kind === 'repeat' || statement.kind === 'if') {
+            visitStatements(statement.body || [], [...clonePath(path), { statementIndex, childName: 'BODY' }], currentPrefix);
+          } else if (statement.kind === 'genericStatement' && statement.branches?.length) {
+            statement.branches.forEach((branch) => {
+              const branchLabel = branchNameToText(branch.name);
+              if (branchLabel) {
+                lines.push(branchLabel);
+                lineMap.push({
+                  type: 'branch-header',
+                  scriptIndex,
+                  path: clonePath(path),
+                  statementIndex,
+                  branchName: branch.name,
+                  editableText: branchLabel,
+                });
+              }
+              visitStatements(branch.body || [], [...clonePath(path), { statementIndex, childName: branch.name }], currentPrefix);
+            });
+          }
+        });
+        return true;
+      }
+
+      const hasStatements = visitStatements(script.body, [], '');
+      if (!hasStatements) {
+        lines.push('No steps in this script.');
+        lineMap.push({
+          type: 'no-steps',
+          scriptIndex,
+          editableText: '',
+        });
+      }
+
+      if (scriptIndex < scripts.length - 1) {
+        lines.push('');
+        lineMap.push({
+          type: 'empty',
+        });
+      }
+    });
+
+    return {
+      text: lines.join('\n').trim(),
+      lines,
+      lineMap,
+    };
+  }
+
   function renderProject(project, options = {}) {
-    if (state.speech.active) cancelSpeech();
+    if (state.speech.active && !state.inlineEdit?.active) cancelSpeech();
+    if (state.inlineEdit?.active) {
+      state.inlineEdit = null;
+    }
     state.project = cloneJson(project);
     state.ast = window.LecpAdapter.projectToAst(project);
-    const scripts = state.ast.scripts || [];
-    const chunks = [];
-    scripts.forEach((script, index) => {
-      chunks.push(`Script ${index + 1}: ${triggerToText(script.trigger)}`);
-      chunks.push(linesToText(buildLines(script.body)) || 'No steps in this script.');
-    });
-    state.text = chunks.join('\n\n').trim();
-    state.lines = state.text.split(/\n/);
+    const built = buildProjectLines(state.ast);
+    state.text = built.text;
+    state.lines = built.lines;
+    state.lineMap = built.lineMap;
     updateMetaText();
     if (state.text) {
       renderCodeLines();
@@ -1652,6 +1761,233 @@
       setStatus('Zsynchronizowano z obszarem roboczym.');
     }
     updateLessonActionAvailability();
+  }
+
+  function startInlineLineEditing(targetIndex) {
+    if (state.inlineEdit?.active) return;
+    if (!state.lines || !state.lines.length) return;
+
+    let index = Number.isInteger(targetIndex) ? targetIndex : state.speech.highlightedIndex;
+    if (!Number.isInteger(index) || index < 0 || index >= state.lines.length) {
+      if (Number.isInteger(state.speech.index) && state.speech.index >= 0 && state.speech.index < state.lines.length) {
+        index = state.speech.index;
+      } else {
+        index = state.lines.findIndex((l) => Boolean(l && l.trim()));
+        if (index < 0) index = 0;
+      }
+    }
+
+    if (state.speech.active) {
+      if ('speechSynthesis' in window) speechSynthesis.cancel();
+      if (state.speech.timeoutId) {
+        clearTimeout(state.speech.timeoutId);
+        state.speech.timeoutId = null;
+      }
+      state.speech.paused = true;
+      updateSpeechButton();
+    }
+
+    const info = state.lineMap?.[index];
+    if (!info || info.type === 'empty' || info.type === 'branch-header') {
+      announceOperation(ui.announcer, 'Tej linii nie można edytować.');
+      return;
+    }
+
+    setSpeechLineHighlight(index);
+    const lineElement = ui.text.querySelector(`[data-speech-line="${index}"]`);
+    if (!lineElement) return;
+
+    const currentLineText = state.lines[index] || '';
+    const initialValue = info.editableText || currentLineText;
+
+    state.inlineEdit = {
+      active: true,
+      lineIndex: index,
+      info,
+      originalLineText: currentLineText,
+      lineElement,
+    };
+
+    lineElement.classList.add('tadroid-text-line-editing');
+    lineElement.replaceChildren();
+
+    const wrapper = document.createElement('div');
+    wrapper.className = 'tadroid-inline-edit-wrapper';
+
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'tadroid-inline-edit-input';
+    input.value = initialValue;
+    input.setAttribute('aria-label', `Edytuj linię: ${currentLineText}`);
+    input.setAttribute('role', 'textbox');
+    input.maxLength = 60;
+
+    const hint = document.createElement('div');
+    hint.className = 'tadroid-inline-edit-hint';
+    hint.textContent = 'Enter: Zapisz | Esc: Anuluj';
+
+    const errorContainer = document.createElement('div');
+    errorContainer.className = 'tadroid-inline-edit-error';
+    errorContainer.setAttribute('role', 'alert');
+    errorContainer.setAttribute('aria-live', 'assertive');
+    errorContainer.hidden = true;
+
+    wrapper.appendChild(input);
+    wrapper.appendChild(hint);
+    wrapper.appendChild(errorContainer);
+    lineElement.appendChild(wrapper);
+
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        event.stopPropagation();
+        commitInlineLineEditing(input.value.trim(), errorContainer, input);
+      } else if (event.key === 'Escape') {
+        event.preventDefault();
+        event.stopPropagation();
+        cancelInlineLineEditing();
+      }
+    });
+
+    setTimeout(() => {
+      input.focus();
+      input.select();
+    }, 0);
+
+    announceOperation(ui.announcer, `Edycja linii: ${currentLineText}. Wpisz nową wartość lub polecenie, wciśnij Enter aby zapisać lub Escape aby anulować.`);
+  }
+
+  function cancelInlineLineEditing() {
+    if (!state.inlineEdit?.active) return;
+    const lineIndex = state.inlineEdit.lineIndex;
+    const lineElement = state.inlineEdit.lineElement;
+    const originalText = state.inlineEdit.originalLineText;
+    state.inlineEdit = null;
+
+    if (lineElement) {
+      lineElement.classList.remove('tadroid-text-line-editing');
+      lineElement.textContent = originalText || '\u00a0';
+    }
+    setSpeechLineHighlight(lineIndex);
+    announceOperation(ui.announcer, 'Anulowano edycję linii.');
+  }
+
+  function commitInlineLineEditing(rawInput, errorContainer, inputElement) {
+    function showError(message) {
+      errorContainer.hidden = false;
+      errorContainer.textContent = message;
+      inputElement.classList.add('tadroid-inline-edit-input-error');
+      inputElement.setAttribute('aria-invalid', 'true');
+      announceOperation(ui.announcer, `Błąd: ${message}`);
+    }
+
+    if (!rawInput) {
+      showError('Wartość nie może być pusta. Wpisz polecenie lub wciśnij Escape.');
+      return;
+    }
+
+    if (!state.inlineEdit || !state.ast) {
+      showError('Brak aktywnego projektu do edycji.');
+      return;
+    }
+
+    const { info, lineIndex } = state.inlineEdit;
+
+    // Handle single numerical/direct parameter modification if input is a pure number or single parameter
+    if (info.type === 'statement' && info.statement) {
+      const isPureNumber = /^-?\d+(?:\.\d+)?$/.test(rawInput);
+      if (isPureNumber) {
+        const num = Number(rawInput);
+        if (info.statement.kind === 'move') {
+          if (num <= 0) { showError('Liczba kroków musi być dodatnią liczbą większą od zera.'); return; }
+          info.statement.value = num;
+          return applyInlineEditSuccess(lineIndex, `Move ${directionText(info.statement.direction)} for ${num} ${numberLabel(num, 'step', 'steps')}`);
+        }
+        if (info.statement.kind === 'turn') {
+          if (num <= 0) { showError('Liczba stopni musi być dodatnią liczbą większą od zera.'); return; }
+          info.statement.degrees = num;
+          return applyInlineEditSuccess(lineIndex, `Turn ${directionText(info.statement.direction)} for ${num} ${numberLabel(num, 'degree', 'degrees')}`);
+        }
+        if (info.statement.kind === 'repeat') {
+          if (!Number.isInteger(num) || num < 1) { showError('Liczba powtórzeń musi być dodatnią liczbą całkowitą.'); return; }
+          info.statement.times = num;
+          return applyInlineEditSuccess(lineIndex, `Repeat ${num} ${numberLabel(num, 'time', 'times')}`);
+        }
+        if (info.statement.kind === 'motorRunForRotations') {
+          if (num <= 0) { showError('Liczba obrotów musi być dodatnią liczbą większą od zera.'); return; }
+          info.statement.value = num;
+          return applyInlineEditSuccess(lineIndex, `Run the motor ${motorDirectionText(info.statement.direction)} for ${num} rotations`);
+        }
+        if (info.statement.kind === 'dataVariableSet' || info.statement.kind === 'dataVariableChangeBy') {
+          info.statement.value = num;
+          return applyInlineEditSuccess(lineIndex, `Zmieniono zmienną na ${num}`);
+        }
+      }
+    }
+
+    const cleanedText = rawInput.replace(/^\s*(?:(?:\d+(?:\.\d+)*|Script\s+\d+)\s*:\s*)/i, '').trim();
+    const { statements, scripts, errors } = parseComposerInput(cleanedText);
+
+    if (errors.length) {
+      showError(formatCommandErrors(errors));
+      return;
+    }
+
+    if (info.type === 'statement') {
+      if (!statements.length) {
+        showError('Wpisz poprawne polecenie (np. "Move forward for 10 steps" lub "Run the motor clockwise for 2 rotations").');
+        return;
+      }
+      // Preserve container bodies if needed
+      if (info.statement?.kind === 'repeat' && statements[0].kind === 'repeat' && info.statement.body?.length && (!statements[0].body || !statements[0].body.length)) {
+        statements[0].body = info.statement.body;
+      } else if (info.statement?.kind === 'if' && statements[0].kind === 'if' && info.statement.body?.length && (!statements[0].body || !statements[0].body.length)) {
+        statements[0].body = info.statement.body;
+      }
+
+      const targetStatements = getStatementsAtPath(info.scriptIndex, info.path);
+      if (!targetStatements) {
+        showError('Nie odnaleziono instrukcji w strukturze projektu.');
+        return;
+      }
+      targetStatements.splice(info.statementIndex, 1, ...statements);
+      return applyInlineEditSuccess(lineIndex, cleanedText);
+    }
+
+    if (info.type === 'trigger') {
+      if (!scripts.length || !scripts[0].trigger) {
+        showError('Wpisz poprawny wyzwalacz skryptu (np. "When the program starts" lub "When the up key is pressed").');
+        return;
+      }
+      state.ast.scripts[info.scriptIndex].trigger = scripts[0].trigger;
+      return applyInlineEditSuccess(lineIndex, cleanedText);
+    }
+
+    if (info.type === 'no-steps') {
+      if (!statements.length) {
+        showError('Wpisz poprawne polecenie do dodania do skryptu.');
+        return;
+      }
+      state.ast.scripts[info.scriptIndex].body.push(...statements);
+      return applyInlineEditSuccess(lineIndex, cleanedText);
+    }
+
+    showError('Nie można zmodyfikować tego elementu.');
+  }
+
+  function applyInlineEditSuccess(lineIndex, description) {
+    const project = buildProjectFromAst();
+    if (!project) {
+      announceOperation(ui.announcer, 'Błąd: nie udało się wygenerować zaktualizowanego projektu.');
+      return;
+    }
+    state.inlineEdit = null;
+    renderProject(project);
+    requestProjectApply(project);
+    const targetLineIndex = Math.min(lineIndex, (state.lines.length || 1) - 1);
+    setSpeechLineHighlight(targetLineIndex);
+    announceOperation(ui.announcer, `Pomyślnie zmieniono linię: ${description}.`);
+    setStatus('Zaktualizowano linię w projekcie.');
   }
 
   function populateVoices() {
@@ -3589,7 +3925,7 @@
 
   function handleLessonAction(action) {
     switch (action) {
-      case 'previous': moveLessonStep(-1); break;
+      case 'previous': moveLessonStep(-1, { focusHeading: true }); break;
       case 'next': moveLessonStep(1, { focusHeading: true }); break;
       case 'insertSample': insertCurrentLessonSample(); break;
     }
@@ -3796,6 +4132,10 @@
 
     if (matchesAnyShortcut(event, SHORTCUTS.close)) {
       event.preventDefault();
+      if (state.inlineEdit?.active) {
+        cancelInlineLineEditing();
+        return;
+      }
       if (ui.partsDialog?.open) {
         closePartsDialog();
         return;
@@ -3871,6 +4211,23 @@
     }
 
     if (isEditableTarget(eventTarget) && !event.altKey && !event.ctrlKey && !event.metaKey) return;
+
+    if (event.code === 'Space' || event.key === ' ' || event.key === 'Spacebar') {
+      if (!event.altKey && !event.ctrlKey && !event.metaKey && !event.shiftKey) {
+        if (!isEditableTarget(eventTarget)) {
+          if (panelIsOpen() || state.speech.active) {
+            const now = Date.now();
+            if (state.lastSpacePressTime && (now - state.lastSpacePressTime < 450)) {
+              state.lastSpacePressTime = 0;
+              event.preventDefault();
+              startInlineLineEditing();
+              return;
+            }
+            state.lastSpacePressTime = now;
+          }
+        }
+      }
+    }
 
     if (matchesAnyShortcut(event, SHORTCUTS.speak)) {
       event.preventDefault();

@@ -26,7 +26,7 @@ Otwórz go klikając przycisk w lewym dolnym rogu lub wciskając **Shift+K**.
 ### Wgrywanie własnego kursu
 Panel kursu wymaga wgrania treści jako pliku tekstowego:
 
-* **Przycisk „Wgraj kurs”** w nagłówku panelu (lub skrót **Shift+B**) otwiera okno wyboru pliku `.txt`.
+* **Przycisk z ikoną wgrania pliku** („Wgraj plik .txt”) w nagłówku panelu (lub skrót **Shift+B**) otwiera okno wyboru pliku `.txt`.
 * Plik musi być zapisany w formacie opisanym w przykładowym pliku [kurs-wzor.txt](kurs-wzor.txt) w tym repozytorium — możesz go skopiować i zmodyfikować, żeby stworzyć własny kurs.
 * Tagi `@course:` oraz `@module:` są opcjonalne — jeśli plik zawiera tylko jedną lekcję, możesz zacząć plik od razu od `@lesson:` i kolejnych `@step:`.
 * Po wybraniu poprawnego pliku pojawi się prośba o potwierdzenie, ponieważ wgranie nowego kursu **zastępuje bieżący kurs i resetuje zapisany postęp ucznia**.
@@ -53,10 +53,14 @@ Po wgraniu kursu poniżej nagłówka panelu znajdziesz dwie zakładki:
 Otwórz go klikając przycisk w prawym dolnym rogu lub wciskając **Shift+O**. Zamienia on wizualne bloki na przejrzysty tekst i pozwala kontrolować kod.
 
 ### Odczyt kodu na głos
-* **Odśwież (Shift+R):** ponownie odczytuje bieżący stan projektu (aktualizuje się też automatycznie po zmianie bloków)
-* **Czytaj (Shift+S):** Odczytuje cały program linijka po linijce, podświetlając aktualnie czytany fragment.
+* **Odśwież (Shift+R):** przycisk z ikoną odświeżania w nagłówku panelu ponownie odczytuje bieżący stan projektu (aktualizuje się też automatycznie po zmianie bloków)
+* **Czytaj (Shift+S):** Odczytuje cały program linijka po linijce, podświetlając aktualnie czytany fragment na zielono.
 * **Wstrzymaj / Wznów (Shift+P) oraz Zatrzymaj (Shift+X):** Kontrola czytania w dowolnym momencie.
 * **Poprzednia / Następna linia (Shift+J / Shift+L):** Pozwala wygodnie przejść do interesującego Cię fragmentu kodu.
+* **Edycja zielonej linii z klawiatury (Podwójna Spacja):** Podczas odczytu (lub po podświetleniu dowolnej linii) wciśnij dwukrotnie klawisz **Spacja**, aby edytować parametry lub całe polecenie bezpośrednio z klawiatury.
+  * Wpisz nową wartość (np. liczbę obrotów, nową wartość parametru lub całe polecenie) i wciśnij **Enter**, aby natychmiast zaktualizować projekt na stronie.
+  * Wciśnij **Escape**, aby anulować edycję bez wprowadzania zmian.
+  * W razie wpisania błędnej wartości (np. tekstu zamiast liczby lub nierozpoznanego polecenia) pojawi się czytelny komunikat o błędzie, a pole edycji pozostanie otwarte do poprawy.
 
 ### Dodawanie i edycja kodu z klawiatury („Narzędzia edycji”)
 Rozwiń sekcję edycji na dole panelu (skrót: **Shift+U**), by budować program wpisując polecenia tekstowe:
@@ -99,7 +103,8 @@ Wszystkie interakcje posiadają pełne wsparcie klawiatury. Klawiszem modyfikuj�
 | Shift+Lewo                         | Poprzedni krok w kursie                       |
 | Shift+Prawo                        | Następny krok w kursie                        |
 | Shift+Enter                        | Wstaw fragment kodu z panelu kursu            |
-| Escape                             | Zamknij aktualnie otwarte okno dialogowe      |
+| Podwójna Spacja                    | Edycja aktualnie czytanej (zielonej) linii    |
+| Escape                             | Zamknij okno dialogowe lub anuluj edycję      |
 
 ---
 LEGO® is a trademark of the LEGO Group of companies which does not sponsor, authorize or endorse this project.
